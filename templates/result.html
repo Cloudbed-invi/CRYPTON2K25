@@ -26,6 +26,28 @@
       border-radius: 8px;
       font-size: 1.1em;
     }
+    /* Dashboard Navigation Button */
+    .dashboard-button {
+      text-align: center;
+      margin: 20px;
+    }
+    .dashboard-button button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s linear;
+      border-radius: 10px;
+      border: 1px solid #F2BED1;
+      padding: 5px 10px;
+      background: none;
+      color: #03dac6;
+      font-size: 0.9em;
+    }
+    .dashboard-button button:hover {
+      box-shadow: 5px 5px 20px #d1d1d1;
+      transform: translateY(-3px);
+    }
     /* Filter Panel */
     .filter-panel {
       background: #1e1e1e;
@@ -75,7 +97,7 @@
       gap: 20px;
       padding: 20px;
     }
-    /* Candidate Card Styling */
+    /* Candidate Card Styling with animation */
     .card {
       background: #1e1e1e;
       border-radius: 8px;
@@ -88,17 +110,24 @@
       height: 450px;
       margin: auto;
       padding-bottom: 60px;
+      opacity: 0;
+      animation: fadeInUp 0.6s ease forwards;
     }
     .card:hover {
       transform: translateY(-5px);
     }
-    .card-content {
+    .card .content {
       padding: 15px;
     }
-    .card-title {
+    .card .front .title {
       font-size: 1.3em;
       font-weight: bold;
       color: #fff;
+      margin-bottom: 10px;
+    }
+    .card .front .score,
+    .card .front .position {
+      margin-bottom: 5px;
     }
     /* Score badge */
     .score-badge {
@@ -141,6 +170,7 @@
       margin-bottom: 15px;
       color: #e0e0e0;
       font-size: 0.9em;
+      line-height: 1.4;
     }
     .breakdown p {
       margin: 5px 0;
@@ -179,6 +209,17 @@
     .link-group button {
       margin-left: 10px;
     }
+    /* FadeInUp animation keyframes */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
   </style>
 </head>
 <body>
@@ -190,6 +231,13 @@
     <p>Average Score: <strong>{{ average_score }}</strong> / 10</p>
     <p>Highest Score: <strong>{{ highest_score }}</strong> / 10</p>
     <p>Lowest Score: <strong>{{ lowest_score }}</strong> / 10</p>
+  </div>
+  
+  <!-- Dashboard Navigation Button -->
+  <div class="dashboard-button">
+    <button onclick="window.location.href='{{ url_for('dashboard') }}';">
+      Go to Dashboard
+    </button>
   </div>
   
   <!-- Filter Panel -->
@@ -249,7 +297,6 @@
   </div>
   
   <script>
-    // Toggle expansion for all cards (flip effect is on hover, so no JS needed for flip)
     // Filtering function
     function applyFilters() {
       const minScore = parseFloat(document.getElementById('minScore').value) || 0;
@@ -266,9 +313,8 @@
         }
       });
       
-      // Now, show only the top N cards (assuming cards are sorted by score descending on the server).
+      // Show only the top N cards (assuming cards are sorted by score descending on the server).
       cards = cards.filter(card => card.style.display !== 'none');
-      // Hide any card after the top N.
       cards.forEach((card, index) => {
         if (index >= topN) {
           card.style.display = 'none';
@@ -277,6 +323,14 @@
         }
       });
     }
+    
+    // Stagger animation delay for a smoother entrance
+    document.addEventListener("DOMContentLoaded", function() {
+      const cards = document.querySelectorAll('.card');
+      cards.forEach((card, index) => {
+        card.style.animationDelay = (index * 0.1) + "s";
+      });
+    });
   </script>
 </body>
 </html>

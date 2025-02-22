@@ -40,18 +40,22 @@
 <body>
   <h1>HR Dashboard</h1>
   
+  <!-- Buzzwords Frequency Bar Chart -->
   <div class="chart-container">
     <canvas id="buzzChart"></canvas>
   </div>
   
-  <div class="chart-container">
-    <canvas id="skillChart"></canvas>
-  </div>
-  
+  <!-- Programming Languages Frequency Bar Chart -->
   <div class="chart-container">
     <canvas id="progLangChart"></canvas>
   </div>
   
+  <!-- Resume Length Distribution Bar Chart -->
+  <div class="chart-container">
+    <canvas id="lengthChart"></canvas>
+  </div>
+  
+  <!-- Soft Skills Frequency Pie Chart -->
   <div class="chart-container">
     <canvas id="softSkillChart"></canvas>
   </div>
@@ -65,14 +69,13 @@
     const buzzLabels = {{ buzz_labels | tojson }};
     const buzzData = {{ buzz_data | tojson }};
     
-    const skillLabels = {{ skill_labels | tojson }};
-    const skillData = {{ skill_data | tojson }};
-    
-    // Predefined lists for programming languages and soft skills.
-    const progLangs = ['python', 'java', 'c++', 'javascript', 'ruby', 'go', 'php', 'c#'];
+    const progLangs = {{ prog_langs | tojson }};
     const progLangCounts = {{ prog_lang_counts | tojson }};
     
-    const softSkills = ['communication', 'teamwork', 'problem-solving', 'adaptability', 'leadership', 'creativity'];
+    const lengthLabels = {{ length_labels | tojson }};
+    const lengthCounts = {{ length_counts | tojson }};
+    
+    const softSkills = {{ soft_skills | tojson }};
     const softSkillCounts = {{ soft_skill_counts | tojson }};
     
     // Create Buzzwords Bar Chart.
@@ -107,41 +110,9 @@
       }
     });
     
-    // Create Skills Pie Chart.
-    const ctx2 = document.getElementById('skillChart').getContext('2d');
-    new Chart(ctx2, {
-      type: 'pie',
-      data: {
-        labels: skillLabels,
-        datasets: [{
-          label: 'Skills Frequency',
-          data: skillData,
-          backgroundColor: [
-            'rgba(3, 218, 198, 0.7)',
-            'rgba(255, 82, 82, 0.7)',
-            'rgba(255, 202, 40, 0.7)',
-            'rgba(66, 165, 245, 0.7)',
-            'rgba(102, 187, 106, 0.7)',
-            'rgba(171, 71, 188, 0.7)',
-            'rgba(255, 112, 67, 0.7)',
-            'rgba(77, 208, 225, 0.7)',
-            'rgba(255, 238, 88, 0.7)',
-            'rgba(240, 98, 146, 0.7)'
-          ],
-          borderColor: '#121212',
-          borderWidth: 1
-        }]
-      },
-      options: {
-        plugins: {
-          legend: { labels: { color: '#e0e0e0' } }
-        }
-      }
-    });
-    
     // Create Programming Languages Bar Chart.
-    const ctx3 = document.getElementById('progLangChart').getContext('2d');
-    new Chart(ctx3, {
+    const ctx2 = document.getElementById('progLangChart').getContext('2d');
+    new Chart(ctx2, {
       type: 'bar',
       data: {
         labels: progLangs,
@@ -150,6 +121,38 @@
           data: progLangCounts,
           backgroundColor: 'rgba(255, 82, 82, 0.7)',
           borderColor: 'rgba(255, 82, 82, 1)',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: { color: '#e0e0e0' },
+            grid: { color: '#333' }
+          },
+          x: {
+            ticks: { color: '#e0e0e0' },
+            grid: { display: false }
+          }
+        },
+        plugins: {
+          legend: { labels: { color: '#e0e0e0' } }
+        }
+      }
+    });
+    
+    // Create Resume Length Distribution Bar Chart.
+    const ctx3 = document.getElementById('lengthChart').getContext('2d');
+    new Chart(ctx3, {
+      type: 'bar',
+      data: {
+        labels: lengthLabels,
+        datasets: [{
+          label: 'Resume Length Distribution (word count)',
+          data: lengthCounts,
+          backgroundColor: 'rgba(255, 206, 86, 0.7)',
+          borderColor: 'rgba(255, 206, 86, 1)',
           borderWidth: 1
         }]
       },

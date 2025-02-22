@@ -159,6 +159,7 @@ def upload():
         flash("No files uploaded.")
         return render_template('index.html')
     
+    # Retrieve form data
     job_title = request.form.get('job_title')
     required_skills = request.form.get('skills')
     required_languages = request.form.get('languages', '')
@@ -171,114 +172,98 @@ def upload():
     
     results = []
     for file in files:
-        if file.filename == '':
+        if not file.filename:
             continue
         filename = file.filename.lower()
         try:
             if filename.endswith('.zip'):
-                tmp_zip = tempfile.NamedTemporaryFile(delete=False, suffix='.zip')
-                try:
+                with tempfile.NamedTemporaryFile(delete=False, suffix='.zip') as tmp_zip:
                     file.save(tmp_zip.name)
-                    tmp_zip.close()
-                    with zipfile.ZipFile(tmp_zip.name, 'r') as zip_ref:
-                        for name in zip_ref.namelist():
-                            if name.endswith(('.pdf', '.docx', '.txt')):
-                                tmp_file = tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(name)[1])
-                                try:
-                                    file_bytes = zip_ref.read(name)
-                                    tmp_file.write(file_bytes)
-                                    tmp_file.close()
-                                    extracted_text = extract_text_from_file(tmp_file.name)
-                                    entities = extract_entities(extracted_text)
-                                    validation = perform_basic_validation(extracted_text)
-                                    candidate_name = extract_candidate_name(extracted_text)
-                                    score, breakdown = compute_score_robust(
-                                        extracted_text,
-                                        job_title,
-                                        required_skills,
-                                        required_languages,
-                                        min_skills,
-                                        min_languages,
-                                        enable_ats,
-                                        enable_bonus,
-                                        extra_bonus_keywords,
-                                        extra_universities
-                                    )
-                                    summary_id = str(uuid.uuid4())
-                                    ext_lower = os.path.splitext(name)[1].lower()
-                                    if ext_lower == '.pdf':
-                                        FILE_STORE[summary_id] = {
-                                            'type': 'pdf',
-                                            'data': file_bytes
-                                        }
-                                        RAW_TEXT[summary_id] = extracted_text
-                                    else:
-                                        RAW_TEXT[summary_id] = extracted_text
-                                    results.append({
-                                        'file': name,
-                                        'text': extracted_text,
-                                        'candidate_name': candidate_name,
-                                        'entities': entities,
-                                        'validation': validation,
-                                        'score': score,
-                                        'score_breakdown': breakdown,
-                                        'summary_id': summary_id
-                                    })
-                                finally:
-                                    os.remove(tmp_file.name)
-                finally:
-                    os.remove(tmp_zip.name)
+                with zipfile.ZipFile(tmp_zip.name, 'r') as zip_ref:
+                    for name in zip_ref.namelist():
+                        if name.endswith(('.pdf', '.docx', '.txt')):
+                            with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(name)[1]) as tmp_file:
+                                file_bytes = zip_ref.read(name)
+                                tmp_file.write(file_bytes)
+                                tmp_file.close()
+                                extracted_text = extract_text_from_file(tmp_file.name)
+                                entities = extract_entities(extracted_text)
+                                validation = perform_basic_validation(extracted_text)
+                                candidate_name = extract_candidate_name(extracted_text)
+                                score, breakdown = compute_score_robust(
+                                    extracted_text,
+                                    job_title,
+                                    required_skills,
+                                    required_languages,
+                                    min_skills,
+                                    min_languages,
+                                    enable_ats,
+                                    enable_bonus,
+                                    extra_bonus_keywords,
+                                    extra_universities
+                                )
+                                summary_id = str(uuid.uuid4())
+                                ext_lower = os.path.splitext(name)[1].lower()
+                                if ext_lower == '.pdf':
+                                    FILE_STORE[summary_id] = {'type': 'pdf', 'data': file_bytes}
+                                    RAW_TEXT[summary_id] = extracted_text
+                                else:
+                                    RAW_TEXT[summary_id] = extracted_text
+                                results.append({
+                                    'file': name,
+                                    'text': extracted_text,
+                                    'candidate_name': candidate_name,
+                                    'entities': entities,
+                                    'validation': validation,
+                                    'score': score,
+                                    'score_breakdown': breakdown,
+                                    'summary_id': summary_id
+                                })
+                            os.remove(tmp_file.name)
+                os.remove(tmp_zip.name)
             else:
                 ext = os.path.splitext(file.filename)[1]
-                tmp_file = tempfile.NamedTemporaryFile(delete=False, suffix=ext)
-                try:
+                with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as tmp_file:
                     file.save(tmp_file.name)
-                    tmp_file.close()
-                    extracted_text = extract_text_from_file(tmp_file.name)
-                    entities = extract_entities(extracted_text)
-                    validation = perform_basic_validation(extracted_text)
-                    candidate_name = extract_candidate_name(extracted_text)
-                    score, breakdown = compute_score_robust(
-                        extracted_text,
-                        job_title,
-                        required_skills,
-                        required_languages,
-                        min_skills,
-                        min_languages,
-                        enable_ats,
-                        enable_bonus,
-                        extra_bonus_keywords,
-                        extra_universities
-                    )
-                    summary_id = str(uuid.uuid4())
-                    ext_lower = ext.lower()
-                    if ext_lower == '.pdf':
-                        with open(tmp_file.name, 'rb') as f:
-                            file_bytes = f.read()
-                        FILE_STORE[summary_id] = {
-                            'type': 'pdf',
-                            'data': file_bytes
-                        }
-                        RAW_TEXT[summary_id] = extracted_text
-                    else:
-                        RAW_TEXT[summary_id] = extracted_text
-                    results.append({
-                        'file': file.filename,
-                        'text': extracted_text,
-                        'candidate_name': candidate_name,
-                        'entities': entities,
-                        'validation': validation,
-                        'score': score,
-                        'score_breakdown': breakdown,
-                        'summary_id': summary_id
-                    })
-                finally:
-                    os.remove(tmp_file.name)
+                extracted_text = extract_text_from_file(tmp_file.name)
+                entities = extract_entities(extracted_text)
+                validation = perform_basic_validation(extracted_text)
+                candidate_name = extract_candidate_name(extracted_text)
+                score, breakdown = compute_score_robust(
+                    extracted_text,
+                    job_title,
+                    required_skills,
+                    required_languages,
+                    min_skills,
+                    min_languages,
+                    enable_ats,
+                    enable_bonus,
+                    extra_bonus_keywords,
+                    extra_universities
+                )
+                summary_id = str(uuid.uuid4())
+                if ext.lower() == '.pdf':
+                    with open(tmp_file.name, 'rb') as f:
+                        file_bytes = f.read()
+                    FILE_STORE[summary_id] = {'type': 'pdf', 'data': file_bytes}
+                    RAW_TEXT[summary_id] = extracted_text
+                else:
+                    RAW_TEXT[summary_id] = extracted_text
+                results.append({
+                    'file': file.filename,
+                    'text': extracted_text,
+                    'candidate_name': candidate_name,
+                    'entities': entities,
+                    'validation': validation,
+                    'score': score,
+                    'score_breakdown': breakdown,
+                    'summary_id': summary_id
+                })
+                os.remove(tmp_file.name)
         except Exception as e:
             results.append({'file': file.filename, 'text': f"Error processing file: {str(e)}"})
     
     results = sorted(results, key=lambda x: x.get('score', 0), reverse=True)
-    
     total_candidates = len(results)
     average_score = round(sum(r.get('score', 0) for r in results) / total_candidates, 2) if total_candidates > 0 else 0
     highest_score = max(r.get('score', 0) for r in results) if total_candidates > 0 else 0
@@ -339,21 +324,16 @@ def dashboard():
         matches = re.findall(r'\b' + re.escape(word) + r'\b', all_text, re.IGNORECASE)
         buzzword_counter[word] = len(matches)
     
-    # Extract skills from resumes (lines starting with "skills:")
-    skills_counter = Counter()
-    for text in RAW_TEXT.values():
-        matches = re.findall(r'(?mi)^skills[:\-]\s*(.+)$', text)
-        for match in matches:
-            for skill in match.split(','):
-                skill = skill.strip().lower()
-                if skill:
-                    skills_counter[skill] += 1
-                    
     # Programming languages (predefined list)
     prog_langs = ['python', 'java', 'c++', 'javascript', 'ruby', 'go', 'php', 'c#']
     prog_lang_counter = Counter()
     for lang in prog_langs:
-        matches = re.findall(r'\b' + re.escape(lang) + r'\b', all_text, re.IGNORECASE)
+        # Tailor regex for languages with symbols.
+        if lang in ['c++', 'c#']:
+            pattern = r'(?<!\w)' + re.escape(lang) + r'(?!\w)'
+        else:
+            pattern = r'\b' + re.escape(lang) + r'\b'
+        matches = re.findall(pattern, all_text, re.IGNORECASE)
         prog_lang_counter[lang] = len(matches)
     
     # Soft skills (predefined list)
@@ -363,20 +343,32 @@ def dashboard():
         matches = re.findall(r'\b' + re.escape(skill) + r'\b', all_text, re.IGNORECASE)
         soft_skill_counter[skill] = len(matches)
     
+    # Resume Length Distribution (word count bins)
+    resume_lengths = [len(text.split()) for text in RAW_TEXT.values() if text.strip()]
+    bin_ranges = [(0, 100), (101, 200), (201, 300), (301, 400), (401, float('inf'))]
+    length_labels = ["0-100", "101-200", "201-300", "301-400", "401+"]
+    length_counts = [0] * len(bin_ranges)
+    for count in resume_lengths:
+        for i, (low, high) in enumerate(bin_ranges):
+            if low <= count <= high:
+                length_counts[i] += 1
+                break
+
+    # Prepare data for charts.
     top_buzzwords = buzzword_counter.most_common(10)
-    top_skills = skills_counter.most_common(10)
     prog_lang_counts = [prog_lang_counter[lang] for lang in prog_langs]
     soft_skill_counts = [soft_skill_counter[skill] for skill in soft_skills]
     
     buzz_labels = [item[0] for item in top_buzzwords]
     buzz_data = [item[1] for item in top_buzzwords]
     
-    skill_labels = [item[0] for item in top_skills]
-    skill_data = [item[1] for item in top_skills]
-    
-    return render_template('dashboard.html', buzz_labels=buzz_labels, buzz_data=buzz_data,
-                           skill_labels=skill_labels, skill_data=skill_data,
-                           prog_lang_counts=prog_lang_counts, soft_skill_counts=soft_skill_counts)
+    return render_template('dashboard.html', 
+                           buzz_labels=buzz_labels, buzz_data=buzz_data,
+                           prog_langs=prog_langs, prog_lang_counts=prog_lang_counts,
+                           soft_skills=soft_skills, soft_skill_counts=soft_skill_counts,
+                           length_labels=length_labels, length_counts=length_counts)
+
+
 
 if __name__ == '__main__':
     FILE_STORE = {}
