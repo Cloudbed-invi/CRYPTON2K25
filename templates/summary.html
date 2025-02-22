@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Summarized Resume</title>
+  <style>
+     body {
+       font-family: Arial, sans-serif;
+       padding: 20px;
+       background: #f4f4f4;
+       color: #333;
+     }
+     h1 {
+       text-align: center;
+     }
+     .summary-box {
+       background: #fff;
+       padding: 20px;
+       border: 1px solid #ddd;
+       margin: 20px auto;
+       width: 90%;
+       max-width: 800px;
+       border-radius: 8px;
+       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+       word-wrap: break-word;
+     }
+     .back-link {
+       text-align: center;
+       margin-top: 20px;
+     }
+     .back-link a {
+       text-decoration: none;
+       color: #3498db;
+       font-size: 1em;
+     }
+  </style>
+</head>
+<body>
+  <h1>Summarized Resume</h1>
+  <div class="summary-box">
+    <pre>{{ data }}</pre>
+  </div>
+  <div class="back-link">
+    <a href="{{ url_for('index') }}">Back to Results</a>
+  </div>
+</body>
+</html>

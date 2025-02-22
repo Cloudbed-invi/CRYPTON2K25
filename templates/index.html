@@ -2,10 +2,68 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Smart Resume Parser - Upload</title>
+    <title>Smart Resume Parser - Upload & Scoring Config</title>
+    <style>
+      fieldset {
+        margin: 1em 0;
+        padding: 1em;
+        border: 1px solid #ccc;
+      }
+      legend {
+        font-weight: bold;
+      }
+      label {
+        display: block;
+        margin-top: 0.5em;
+      }
+      .scoring-info {
+        background-color: #f9f9f9;
+        padding: 1em;
+        margin: 1em 0;
+        border: 1px dashed #888;
+      }
+      .details {
+        font-size: 0.9em;
+        color: #333;
+        margin-left: 1em;
+      }
+    </style>
 </head>
 <body>
-    <h1>Upload Resumes & Enter Job Requirements</h1>
+    <h1>Upload Resumes & Configure Scoring Parameters</h1>
+
+    <!-- Scoring Mechanism Explanation -->
+    <div class="scoring-info">
+        <h2>Scoring Mechanism Explained</h2>
+        <p>
+            Our resume scoring algorithm evaluates each resume on a scale of <strong>10 points</strong> based on:
+        </p>
+        <ul>
+            <li>
+                <strong>Skills + Job Requirement Matching (max 5 points):</strong>
+                Required skills (scaled with an ideal of 4 skills; max 4 points) plus job title matching (max 1 point).
+            </li>
+            <li>
+                <strong>Languages Matching (max 1 point):</strong>
+                If specified, awards up to 1 point based on required languages.
+            </li>
+            <li>
+                <strong>Bonus Keywords (max 3 points):</strong>
+                If enabled, awards points for certifications and buzzwords. 
+                <div class="details">
+                    <strong>Implemented bonus keywords:</strong> "aws certified", "cisco certified", "pmp", "google", "microsoft", "oracle", "ibm", "certified", "scrum". Additional keywords can be added.
+                </div>
+            </li>
+            <li>
+                <strong>ATS Compatibility (max 2 points):</strong>
+                If enabled, checks for section headers such as "experience", "education", etc.
+            </li>
+        </ul>
+        <p>
+            The raw score is computed from the enabled components and then scaled to a maximum of 10 points.
+        </p>
+    </div>
+
     {% with messages = get_flashed_messages() %}
       {% if messages %}
         <ul>
@@ -15,15 +73,45 @@
         </ul>
       {% endif %}
     {% endwith %}
+
     <form action="{{ url_for('upload') }}" method="post" enctype="multipart/form-data">
-        <label for="job_title">Job Title:</label><br>
-        <input type="text" id="job_title" name="job_title" required><br><br>
-        
-        <label for="skills">Required Skills (comma separated):</label><br>
-        <input type="text" id="skills" name="skills" required><br><br>
-        
-        <label for="files">Upload Resumes (PDF, DOCX, TXT, or ZIP):</label><br>
+        <label for="job_title">Job Title:</label>
+        <input type="text" id="job_title" name="job_title" required>
+
+        <label for="skills">Required Skills (comma separated):</label>
+        <input type="text" id="skills" name="skills" required>
+
+        <label for="languages">Required Languages (comma separated, optional):</label>
+        <input type="text" id="languages" name="languages">
+
+        <fieldset>
+            <legend>Scoring Configuration</legend>
+            <label for="min_skills">Minimum Required Skills Match (number):</label>
+            <input type="number" id="min_skills" name="min_skills" min="0" placeholder="e.g., 3">
+
+            <label for="min_languages">Minimum Languages Match (number, optional):</label>
+            <input type="number" id="min_languages" name="min_languages" min="0" placeholder="e.g., 1">
+
+            <label for="enable_ats">
+              <input type="checkbox" id="enable_ats" name="enable_ats" value="yes" checked>
+              Use ATS Compatibility Scoring
+            </label>
+
+            <label for="enable_bonus">
+              <input type="checkbox" id="enable_bonus" name="enable_bonus" value="yes" checked>
+              Use Bonus Keywords Scoring
+            </label>
+
+            <label for="extra_bonus_keywords">Additional Bonus Keywords (comma separated, optional):</label>
+            <input type="text" id="extra_bonus_keywords" name="extra_bonus_keywords" placeholder="e.g., 'Scrum, Agile, Six Sigma'">
+
+            <label for="extra_universities">Additional Recognized Universities (comma separated, optional):</label>
+            <input type="text" id="extra_universities" name="extra_universities" placeholder="e.g., 'MIT, Caltech'">
+        </fieldset>
+
+        <label for="files">Upload Resumes (PDF, DOCX, TXT, or ZIP):</label>
         <input type="file" name="files" id="files" multiple required>
+
         <br><br>
         <button type="submit">Upload</button>
     </form>

@@ -1,31 +1,159 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Extraction Results</title>
+  <meta charset="UTF-8">
+  <title>Resume Extraction Results</title>
+  <style>
+    /* Reset & basic styling */
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Arial', sans-serif;
+      background: #f4f4f4;
+      color: #333;
+    }
+    h1, h2, h3, h4, p {
+      margin: 0.5em;
+    }
+    /* Gallery Layout */
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 20px;
+      padding: 20px;
+    }
+    /* Candidate Card Styling */
+    .card {
+      background: #fff;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      position: relative;
+      cursor: pointer;
+      transition: transform 0.3s ease;
+      padding-bottom: 50px;
+    }
+    .card:hover {
+      transform: translateY(-5px);
+    }
+    .card-content {
+      padding: 15px;
+    }
+    .card-title {
+      font-size: 1.2em;
+      font-weight: bold;
+    }
+    /* Score badge */
+    .score-badge {
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      background: #3498db;
+      color: #fff;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2em;
+      transition: transform 0.3s ease;
+      z-index: 2;
+    }
+    .card:hover .score-badge {
+      transform: scale(1.1);
+    }
+    /* Expanded details */
+    .details {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.5s ease;
+      background: #fafafa;
+      padding: 0 15px;
+    }
+    .card.expanded .details {
+      max-height: 600px;
+      padding: 15px;
+    }
+    /* Score Breakdown Styling */
+    .breakdown {
+      background: #eef;
+      border: 1px solid #99c;
+      padding: 10px;
+      border-radius: 4px;
+      margin-bottom: 10px;
+    }
+    .breakdown p {
+      margin: 5px 0;
+    }
+    /* Links styling */
+    .link-group {
+      margin-top: 10px;
+      text-align: right;
+    }
+    .link-group a {
+      color: #3498db;
+      text-decoration: none;
+      font-size: 0.9em;
+      margin-left: 10px;
+    }
+    /* Summary Dashboard */
+    .summary {
+      background: #eef;
+      padding: 1em;
+      margin: 20px;
+      border: 1px solid #99c;
+      text-align: center;
+    }
+  </style>
 </head>
 <body>
-    <h1>Job Title: {{ job_title }}</h1>
-    <h2>Required Skills: {{ required_skills }}</h2>
-    <h1>Resume Extraction Results</h1>
-    {% if results %}
-      {% for result in results %}
-        <h3>{{ result.file }}</h3>
-        {% if result.candidate_name %}
-          <p><strong>Candidate Name:</strong> {{ result.candidate_name }}</p>
-        {% endif %}
-        <p><strong>Match Score:</strong> {{ result.score }}%</p>
-        <h4>Extracted Text:</h4>
-        <pre>{{ result.text }}</pre>
-        <h4>Extracted Entities:</h4>
-        <pre>{{ result.entities | tojson(indent=2) }}</pre>
-        <h4>Validation Results:</h4>
-        <pre>{{ result.validation | tojson(indent=2) }}</pre>
-        <hr>
-      {% endfor %}
-    {% else %}
-      <p>No results found.</p>
-    {% endif %}
-    <a href="{{ url_for('index') }}">Upload More Resumes</a>
+  <h1 style="text-align:center; padding:20px;">Resume Extraction Results</h1>
+
+  <!-- Summary Dashboard -->
+  <div class="summary">
+    <p>Total Resumes Processed: <strong>{{ total_candidates }}</strong></p>
+    <p>Average Score: <strong>{{ average_score }}</strong> / 10</p>
+    <p>Highest Score: <strong>{{ highest_score }}</strong> / 10</p>
+    <p>Lowest Score: <strong>{{ lowest_score }}</strong> / 10</p>
+  </div>
+
+  <div class="gallery">
+    {% for result in results %}
+      <div class="card" onclick="toggleDetails(this)">
+        <div class="card-content">
+          <div class="card-title">{{ result.candidate_name or result.file }}</div>
+        </div>
+        <div class="score-badge">{{ result.score }}</div>
+        <!-- Expanded details section -->
+        <div class="details">
+          <h4>Score Breakdown:</h4>
+          <div class="breakdown">
+            <p><strong>Required Skills:</strong> {{ result.score_breakdown.required_skills }} / 4</p>
+            <p><strong>Job Title Matching:</strong> {{ result.score_breakdown.job_title }} / 1</p>
+            <p><strong>Total Skills + Job:</strong> {{ result.score_breakdown.skills_job }} / 5</p>
+            {% if required_languages %}
+              <p><strong>Languages:</strong> {{ result.score_breakdown.languages }} / 1</p>
+            {% endif %}
+            <p><strong>Bonus Keywords:</strong> {{ result.score_breakdown.bonus }} / 3</p>
+            {% if result.score_breakdown.ats is not none %}
+              <p><strong>ATS Compatibility:</strong> {{ result.score_breakdown.ats }} / 2</p>
+            {% endif %}
+            <p><strong>Raw Total:</strong> {{ result.score_breakdown.raw_total }} / {{ result.score_breakdown.total_max }}</p>
+          </div>
+          <div class="link-group" onclick="event.stopPropagation();">
+            <a href="{{ url_for('summary') }}?id={{ result.summary_id }}">View Summarized Resume</a>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+  <script>
+    // Toggle card expansion for details.
+    function toggleDetails(card) {
+      card.classList.toggle('expanded');
+    }
+  </script>
 </body>
 </html>
