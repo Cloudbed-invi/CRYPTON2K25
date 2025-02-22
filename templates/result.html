@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Extraction Results</title>
+</head>
+<body>
+    <h1>Resume Extraction Results</h1>
+    {% if results %}
+      {% for result in results %}
+        <h3>{{ result.file }}</h3>
+        <pre>{{ result.text }}</pre>
+        <hr>
+      {% endfor %}
+    {% else %}
+      <p>No results found.</p>
+    {% endif %}
+    <a href="{{ url_for('index') }}">Upload More Resumes</a>
+</body>
+</html>
