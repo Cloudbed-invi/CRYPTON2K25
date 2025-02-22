@@ -4,34 +4,90 @@
   <meta charset="UTF-8">
   <title>Resume Extraction Results</title>
   <style>
-    /* Reset & basic styling */
+    /* Base dark theme with modern styling */
     body {
       margin: 0;
       padding: 0;
-      font-family: 'Arial', sans-serif;
-      background: #f4f4f4;
-      color: #333;
+      font-family: 'Roboto', sans-serif;
+      background: #121212;
+      color: #e0e0e0;
+      box-sizing: border-box;
     }
     h1, h2, h3, h4, p {
       margin: 0.5em;
     }
+    /* Summary Dashboard */
+    .summary {
+      background: #1e1e1e;
+      padding: 1em;
+      margin: 20px;
+      border: 1px solid #333;
+      text-align: center;
+      border-radius: 8px;
+      font-size: 1.1em;
+    }
+    /* Filter Panel */
+    .filter-panel {
+      background: #1e1e1e;
+      border: 1px solid #333;
+      padding: 15px;
+      margin: 20px;
+      border-radius: 8px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      align-items: center;
+      justify-content: center;
+    }
+    .filter-panel label {
+      font-size: 0.9em;
+      margin-right: 5px;
+    }
+    .filter-panel input {
+      padding: 5px;
+      font-size: 0.9em;
+      border: 1px solid #444;
+      border-radius: 4px;
+      background: #2c2c2c;
+      color: #e0e0e0;
+    }
+    .filter-panel button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s linear;
+      border-radius: 10px;
+      border: 1px solid #F2BED1;
+      padding: 5px 10px;
+      background: none;
+      color: #03dac6;
+      font-size: 0.9em;
+    }
+    .filter-panel button:hover {
+      box-shadow: 5px 5px 20px #d1d1d1;
+      transform: translateY(-3px);
+    }
     /* Gallery Layout */
     .gallery {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
       gap: 20px;
       padding: 20px;
     }
     /* Candidate Card Styling */
     .card {
-      background: #fff;
+      background: #1e1e1e;
       border-radius: 8px;
       overflow: hidden;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.6);
       position: relative;
       cursor: pointer;
       transition: transform 0.3s ease;
-      padding-bottom: 50px;
+      width: 350px;
+      height: 450px;
+      margin: auto;
+      padding-bottom: 60px;
     }
     .card:hover {
       transform: translateY(-5px);
@@ -40,16 +96,17 @@
       padding: 15px;
     }
     .card-title {
-      font-size: 1.2em;
+      font-size: 1.3em;
       font-weight: bold;
+      color: #fff;
     }
     /* Score badge */
     .score-badge {
       position: absolute;
       bottom: 10px;
       right: 10px;
-      background: #3498db;
-      color: #fff;
+      background: #03dac6;
+      color: #121212;
       width: 60px;
       height: 60px;
       border-radius: 50%;
@@ -68,48 +125,65 @@
       max-height: 0;
       overflow: hidden;
       transition: max-height 0.5s ease;
-      background: #fafafa;
+      background: #2c2c2c;
       padding: 0 15px;
     }
     .card.expanded .details {
-      max-height: 600px;
+      max-height: 800px;
       padding: 15px;
     }
     /* Score Breakdown Styling */
     .breakdown {
-      background: #eef;
-      border: 1px solid #99c;
+      background: #333;
+      border: 1px solid #444;
       padding: 10px;
       border-radius: 4px;
-      margin-bottom: 10px;
+      margin-bottom: 15px;
+      color: #e0e0e0;
+      font-size: 0.9em;
     }
     .breakdown p {
       margin: 5px 0;
     }
-    /* Links styling */
+    /* Button styling (from provided snippet, adjusted size) */
+    button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s linear;
+      border-radius: 10px;
+      border: 1px solid #F2BED1;
+      padding: 5px 10px;
+      background: none;
+      color: #03dac6;
+      font-size: 0.8em;
+    }
+    button > svg {
+      margin-left: 5px;
+      transition: all 0.4s ease-in;
+    }
+    button:hover > svg {
+      font-size: 1em;
+      transform: translateX(6px);
+    }
+    button:hover {
+      box-shadow: 5px 5px 20px #d1d1d1;
+      transform: translateY(-3px);
+    }
+    /* Link Group styled as button container */
     .link-group {
-      margin-top: 10px;
-      text-align: right;
-    }
-    .link-group a {
-      color: #3498db;
-      text-decoration: none;
-      font-size: 0.9em;
-      margin-left: 10px;
-    }
-    /* Summary Dashboard */
-    .summary {
-      background: #eef;
-      padding: 1em;
-      margin: 20px;
-      border: 1px solid #99c;
+      margin-top: 15px;
       text-align: center;
+    }
+    .link-group button {
+      margin-left: 10px;
     }
   </style>
 </head>
 <body>
   <h1 style="text-align:center; padding:20px;">Resume Extraction Results</h1>
-
+  
   <!-- Summary Dashboard -->
   <div class="summary">
     <p>Total Resumes Processed: <strong>{{ total_candidates }}</strong></p>
@@ -117,42 +191,91 @@
     <p>Highest Score: <strong>{{ highest_score }}</strong> / 10</p>
     <p>Lowest Score: <strong>{{ lowest_score }}</strong> / 10</p>
   </div>
-
-  <div class="gallery">
+  
+  <!-- Filter Panel -->
+  <div class="filter-panel">
+    <div>
+      <label for="minScore">Minimum Score:</label>
+      <input type="number" id="minScore" min="0" max="10" step="0.1" value="0">
+    </div>
+    <div>
+      <label for="topN">Show Top:</label>
+      <input type="number" id="topN" min="1" value="{{ total_candidates }}">
+    </div>
+    <div>
+      <button onclick="applyFilters()">Apply Filters</button>
+    </div>
+  </div>
+  
+  <div class="gallery" id="gallery">
     {% for result in results %}
-      <div class="card" onclick="toggleDetails(this)">
-        <div class="card-content">
-          <div class="card-title">{{ result.candidate_name or result.file }}</div>
-        </div>
-        <div class="score-badge">{{ result.score }}</div>
-        <!-- Expanded details section -->
-        <div class="details">
-          <h4>Score Breakdown:</h4>
-          <div class="breakdown">
-            <p><strong>Required Skills:</strong> {{ result.score_breakdown.required_skills }} / 4</p>
-            <p><strong>Job Title Matching:</strong> {{ result.score_breakdown.job_title }} / 1</p>
-            <p><strong>Total Skills + Job:</strong> {{ result.score_breakdown.skills_job }} / 5</p>
-            {% if required_languages %}
-              <p><strong>Languages:</strong> {{ result.score_breakdown.languages }} / 1</p>
-            {% endif %}
-            <p><strong>Bonus Keywords:</strong> {{ result.score_breakdown.bonus }} / 3</p>
-            {% if result.score_breakdown.ats is not none %}
-              <p><strong>ATS Compatibility:</strong> {{ result.score_breakdown.ats }} / 2</p>
-            {% endif %}
-            <p><strong>Raw Total:</strong> {{ result.score_breakdown.raw_total }} / {{ result.score_breakdown.total_max }}</p>
+      <div class="card" data-score="{{ result.score }}">
+        <div class="content">
+          <div class="front">
+            <div class="title">{{ result.candidate_name or result.file }}</div>
+            <div class="score">Score: {{ result.score }} / 10</div>
+            <div class="position">Position: {{ job_title }}</div>
           </div>
-          <div class="link-group" onclick="event.stopPropagation();">
-            <a href="{{ url_for('summary') }}?id={{ result.summary_id }}">View Summarized Resume</a>
+          <div class="back">
+            <div class="breakdown">
+              <p><strong>Required Skills:</strong> {{ result.score_breakdown.required_skills }} / 4</p>
+              <p><strong>Job Title Matching:</strong> {{ result.score_breakdown.job_title }} / 1</p>
+              <p><strong>Total Skills + Job:</strong> {{ result.score_breakdown.skills_job }} / 5</p>
+              {% if required_languages %}
+                <p><strong>Languages:</strong> {{ result.score_breakdown.languages }} / 1</p>
+              {% endif %}
+              <p><strong>Bonus Keywords:</strong> {{ result.score_breakdown.bonus }} / 3</p>
+              <p><strong>ATS Compatibility:</strong> {{ result.score_breakdown.ats }} / 2</p>
+              <p><strong>Raw Total:</strong> {{ result.score_breakdown.raw_total }} / {{ result.score_breakdown.total_max }}</p>
+            </div>
+            <div class="link-group">
+              <button onclick="window.location.href='{{ url_for('summary') }}?id={{ result.summary_id }}'; event.stopPropagation();">
+                <span>View Summarized Resume</span>
+                <svg width="15" height="15" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" stroke-linejoin="round" stroke-linecap="round"></path>
+                </svg>
+              </button>
+              <button onclick="window.location.href='{{ url_for('full') }}?id={{ result.summary_id }}'; event.stopPropagation();">
+                <span>View Full Resume</span>
+                <svg width="15" height="15" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" stroke-linejoin="round" stroke-linecap="round"></path>
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
       </div>
     {% endfor %}
   </div>
-
+  
   <script>
-    // Toggle card expansion for details.
-    function toggleDetails(card) {
-      card.classList.toggle('expanded');
+    // Toggle expansion for all cards (flip effect is on hover, so no JS needed for flip)
+    // Filtering function
+    function applyFilters() {
+      const minScore = parseFloat(document.getElementById('minScore').value) || 0;
+      const topN = parseInt(document.getElementById('topN').value) || {{ total_candidates }};
+      let cards = Array.from(document.querySelectorAll('.card'));
+      
+      // Filter by minimum score.
+      cards.forEach(card => {
+        const score = parseFloat(card.getAttribute('data-score'));
+        if (score < minScore) {
+          card.style.display = 'none';
+        } else {
+          card.style.display = 'block';
+        }
+      });
+      
+      // Now, show only the top N cards (assuming cards are sorted by score descending on the server).
+      cards = cards.filter(card => card.style.display !== 'none');
+      // Hide any card after the top N.
+      cards.forEach((card, index) => {
+        if (index >= topN) {
+          card.style.display = 'none';
+        } else {
+          card.style.display = 'block';
+        }
+      });
     }
   </script>
 </body>

@@ -2,6 +2,9 @@ import os
 import zipfile
 import tempfile
 import uuid
+import base64
+import re
+from collections import Counter
 from flask import Flask, render_template, request, flash, url_for
 from transformers import pipeline
 from file_parser import extract_text_from_file
@@ -9,25 +12,26 @@ from nlp_utils import (
     extract_entities, 
     perform_basic_validation, 
     extract_candidate_name, 
-    extract_cleaned_data  # We'll still keep this if needed later
+    extract_cleaned_data
 )
 
 app = Flask(__name__)
-app.secret_key = 'your_secret_key'  # Replace with a secure key in production
+app.secret_key = 'your_secret_key'  # Replace with your own secure key
 
-# Initialize the summarization pipeline (using a lightweight model)
+# Initialize the summarization pipeline (make sure to install PyTorch)
 summarizer = pipeline("summarization", model="sshleifer/distilbart-cnn-12-6")
 
-# Global dictionaries to store raw text and summarized data
-RAW_TEXT = {}      # Maps summary_id -> extracted_text
+# Global dictionaries to store data
+FILE_STORE = {}    # Maps summary_id -> file bytes for PDFs
+RAW_TEXT = {}      # Maps summary_id -> extracted text for resumes
 SUMMARY_DATA = {}  # Maps summary_id -> summarized text
 
 def compute_score_robust(resume_text, job_title, required_skills, required_languages, min_skills, min_languages, enable_ats, enable_bonus, extra_bonus_keywords, extra_universities):
     """
-    Computes a robust raw score for a resume with a breakdown.
+    Computes a robust score for a resume with a detailed breakdown.
     Components:
       1. Skills + Job Requirement Matching (max = 5 points):
-         - Required Skills Matching (max = 4 points; based on actual skills provided)
+         - Required Skills Matching (max = 4 points; based on the actual number of skills provided)
          - Job Title Matching (max = 1 point)
       2. Languages Matching (if provided; max = 1 point)
       3. Bonus Keywords (if enabled; max = 3 points)
@@ -35,13 +39,13 @@ def compute_score_robust(resume_text, job_title, required_skills, required_langu
     
     Returns a tuple: (final_score, breakdown)
     """
-    import re
-    base_text = resume_text.lower()
+    base_text = resume_text.lower() if resume_text else ""
     
     # Component 1: Skills + Job Requirement Matching (max 5)
     required_skills_list = [s.strip().lower() for s in required_skills.split(',') if s.strip()]
     if required_skills_list:
         matched_skills = sum(1 for s in required_skills_list if s in base_text)
+        # Use the actual number of skills provided as the denominator.
         denominator = len(required_skills_list)
         skills_score = (matched_skills / denominator) * 4
         skills_score = min(skills_score, 4)
@@ -59,7 +63,7 @@ def compute_score_robust(resume_text, job_title, required_skills, required_langu
             if words:
                 match = sum(1 for word in words if word in base_text)
                 job_title_score = min(match / len(words), 1)
-    component1_score = skills_score + job_title_score  # max = 5
+    component1_score = skills_score + job_title_score  # Combined max = 5
 
     # Component 2: Languages Matching (max 1)
     language_score = 0
@@ -118,7 +122,7 @@ def compute_score_robust(resume_text, job_title, required_skills, required_langu
 
     raw_total = component1_score + language_score + bonus_score + ats_score
     
-    total_max = 5  # Always include Component 1.
+    total_max = 5  # Component 1 is always enabled.
     if required_languages:
         total_max += 1
     if enable_bonus == "yes":
@@ -164,7 +168,7 @@ def upload():
     enable_bonus = request.form.get('enable_bonus', 'no')
     extra_bonus_keywords = request.form.get('extra_bonus_keywords', '')
     extra_universities = request.form.get('extra_universities', '')
-
+    
     results = []
     for file in files:
         if file.filename == '':
@@ -181,7 +185,8 @@ def upload():
                             if name.endswith(('.pdf', '.docx', '.txt')):
                                 tmp_file = tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(name)[1])
                                 try:
-                                    tmp_file.write(zip_ref.read(name))
+                                    file_bytes = zip_ref.read(name)
+                                    tmp_file.write(file_bytes)
                                     tmp_file.close()
                                     extracted_text = extract_text_from_file(tmp_file.name)
                                     entities = extract_entities(extracted_text)
@@ -199,9 +204,16 @@ def upload():
                                         extra_bonus_keywords,
                                         extra_universities
                                     )
-                                    # Store raw text for summary on-demand.
                                     summary_id = str(uuid.uuid4())
-                                    RAW_TEXT[summary_id] = extracted_text
+                                    ext_lower = os.path.splitext(name)[1].lower()
+                                    if ext_lower == '.pdf':
+                                        FILE_STORE[summary_id] = {
+                                            'type': 'pdf',
+                                            'data': file_bytes
+                                        }
+                                        RAW_TEXT[summary_id] = extracted_text
+                                    else:
+                                        RAW_TEXT[summary_id] = extracted_text
                                     results.append({
                                         'file': name,
                                         'text': extracted_text,
@@ -239,7 +251,17 @@ def upload():
                         extra_universities
                     )
                     summary_id = str(uuid.uuid4())
-                    RAW_TEXT[summary_id] = extracted_text
+                    ext_lower = ext.lower()
+                    if ext_lower == '.pdf':
+                        with open(tmp_file.name, 'rb') as f:
+                            file_bytes = f.read()
+                        FILE_STORE[summary_id] = {
+                            'type': 'pdf',
+                            'data': file_bytes
+                        }
+                        RAW_TEXT[summary_id] = extracted_text
+                    else:
+                        RAW_TEXT[summary_id] = extracted_text
                     results.append({
                         'file': file.filename,
                         'text': extracted_text,
@@ -270,14 +292,13 @@ def upload():
 def summary():
     sid = request.args.get('id')
     if sid:
-        # If summary already computed, return it; otherwise, compute now.
         if sid in SUMMARY_DATA:
             summary_text = SUMMARY_DATA[sid]
         else:
             raw_text = RAW_TEXT.get(sid, None)
             if raw_text:
                 try:
-                    summary = summarizer(raw_text, max_length=150, min_length=30, do_sample=False)
+                    summary = summarizer(raw_text, max_length=250, min_length=50, do_sample=False)
                     summary_text = summary[0]['summary_text']
                     SUMMARY_DATA[sid] = summary_text
                 except Exception as e:
@@ -288,5 +309,77 @@ def summary():
     else:
         return "No summary ID provided", 404
 
+@app.route('/full')
+def full():
+    sid = request.args.get('id')
+    if sid:
+        file_entry = FILE_STORE.get(sid)
+        if file_entry and file_entry['type'] == 'pdf':
+            pdf_data = file_entry['data']
+            b64_pdf = base64.b64encode(pdf_data).decode('utf-8')
+            return render_template('full.html', data=b64_pdf, is_pdf=True)
+        else:
+            raw_text = RAW_TEXT.get(sid, None)
+            if raw_text:
+                return render_template('full.html', data=raw_text, is_pdf=False)
+            else:
+                return "No resume text available.", 404
+    else:
+        return "No resume ID provided", 404
+
+@app.route('/dashboard')
+def dashboard():
+    # Aggregate all resume texts.
+    all_text = " ".join(RAW_TEXT.values())
+    
+    # Buzzwords frequency
+    buzzwords = ['aws', 'certified', 'cisco', 'pmp', 'google', 'microsoft', 'oracle', 'ibm', 'scrum', 'python', 'java', 'sql']
+    buzzword_counter = Counter()
+    for word in buzzwords:
+        matches = re.findall(r'\b' + re.escape(word) + r'\b', all_text, re.IGNORECASE)
+        buzzword_counter[word] = len(matches)
+    
+    # Extract skills from resumes (lines starting with "skills:")
+    skills_counter = Counter()
+    for text in RAW_TEXT.values():
+        matches = re.findall(r'(?mi)^skills[:\-]\s*(.+)$', text)
+        for match in matches:
+            for skill in match.split(','):
+                skill = skill.strip().lower()
+                if skill:
+                    skills_counter[skill] += 1
+                    
+    # Programming languages (predefined list)
+    prog_langs = ['python', 'java', 'c++', 'javascript', 'ruby', 'go', 'php', 'c#']
+    prog_lang_counter = Counter()
+    for lang in prog_langs:
+        matches = re.findall(r'\b' + re.escape(lang) + r'\b', all_text, re.IGNORECASE)
+        prog_lang_counter[lang] = len(matches)
+    
+    # Soft skills (predefined list)
+    soft_skills = ['communication', 'teamwork', 'problem-solving', 'adaptability', 'leadership', 'creativity']
+    soft_skill_counter = Counter()
+    for skill in soft_skills:
+        matches = re.findall(r'\b' + re.escape(skill) + r'\b', all_text, re.IGNORECASE)
+        soft_skill_counter[skill] = len(matches)
+    
+    top_buzzwords = buzzword_counter.most_common(10)
+    top_skills = skills_counter.most_common(10)
+    prog_lang_counts = [prog_lang_counter[lang] for lang in prog_langs]
+    soft_skill_counts = [soft_skill_counter[skill] for skill in soft_skills]
+    
+    buzz_labels = [item[0] for item in top_buzzwords]
+    buzz_data = [item[1] for item in top_buzzwords]
+    
+    skill_labels = [item[0] for item in top_skills]
+    skill_data = [item[1] for item in top_skills]
+    
+    return render_template('dashboard.html', buzz_labels=buzz_labels, buzz_data=buzz_data,
+                           skill_labels=skill_labels, skill_data=skill_data,
+                           prog_lang_counts=prog_lang_counts, soft_skill_counts=soft_skill_counts)
+
 if __name__ == '__main__':
+    FILE_STORE = {}
+    RAW_TEXT = {}
+    SUMMARY_DATA = {}
     app.run(debug=True)

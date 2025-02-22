@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>HR Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: 'Roboto', sans-serif;
+      background: #121212;
+      color: #e0e0e0;
+      margin: 0;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .chart-container {
+      width: 90%;
+      max-width: 800px;
+      margin: 20px auto;
+      background: #1e1e1e;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 20px;
+    }
+    .back-link {
+      text-align: center;
+      margin-top: 20px;
+    }
+    .back-link a {
+      color: #03dac6;
+      text-decoration: none;
+      font-size: 1em;
+    }
+  </style>
+</head>
+<body>
+  <h1>HR Dashboard</h1>
+  
+  <div class="chart-container">
+    <canvas id="buzzChart"></canvas>
+  </div>
+  
+  <div class="chart-container">
+    <canvas id="skillChart"></canvas>
+  </div>
+  
+  <div class="chart-container">
+    <canvas id="progLangChart"></canvas>
+  </div>
+  
+  <div class="chart-container">
+    <canvas id="softSkillChart"></canvas>
+  </div>
+  
+  <div class="back-link">
+    <a href="javascript:history.back()">Back to Results</a>
+  </div>
+  
+  <script>
+    // Data passed from Flask via Jinja.
+    const buzzLabels = {{ buzz_labels | tojson }};
+    const buzzData = {{ buzz_data | tojson }};
+    
+    const skillLabels = {{ skill_labels | tojson }};
+    const skillData = {{ skill_data | tojson }};
+    
+    // Predefined lists for programming languages and soft skills.
+    const progLangs = ['python', 'java', 'c++', 'javascript', 'ruby', 'go', 'php', 'c#'];
+    const progLangCounts = {{ prog_lang_counts | tojson }};
+    
+    const softSkills = ['communication', 'teamwork', 'problem-solving', 'adaptability', 'leadership', 'creativity'];
+    const softSkillCounts = {{ soft_skill_counts | tojson }};
+    
+    // Create Buzzwords Bar Chart.
+    const ctx1 = document.getElementById('buzzChart').getContext('2d');
+    new Chart(ctx1, {
+      type: 'bar',
+      data: {
+        labels: buzzLabels,
+        datasets: [{
+          label: 'Buzzwords Frequency',
+          data: buzzData,
+          backgroundColor: 'rgba(3, 218, 198, 0.7)',
+          borderColor: 'rgba(3, 218, 198, 1)',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: { color: '#e0e0e0' },
+            grid: { color: '#333' }
+          },
+          x: {
+            ticks: { color: '#e0e0e0' },
+            grid: { display: false }
+          }
+        },
+        plugins: {
+          legend: { labels: { color: '#e0e0e0' } }
+        }
+      }
+    });
+    
+    // Create Skills Pie Chart.
+    const ctx2 = document.getElementById('skillChart').getContext('2d');
+    new Chart(ctx2, {
+      type: 'pie',
+      data: {
+        labels: skillLabels,
+        datasets: [{
+          label: 'Skills Frequency',
+          data: skillData,
+          backgroundColor: [
+            'rgba(3, 218, 198, 0.7)',
+            'rgba(255, 82, 82, 0.7)',
+            'rgba(255, 202, 40, 0.7)',
+            'rgba(66, 165, 245, 0.7)',
+            'rgba(102, 187, 106, 0.7)',
+            'rgba(171, 71, 188, 0.7)',
+            'rgba(255, 112, 67, 0.7)',
+            'rgba(77, 208, 225, 0.7)',
+            'rgba(255, 238, 88, 0.7)',
+            'rgba(240, 98, 146, 0.7)'
+          ],
+          borderColor: '#121212',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        plugins: {
+          legend: { labels: { color: '#e0e0e0' } }
+        }
+      }
+    });
+    
+    // Create Programming Languages Bar Chart.
+    const ctx3 = document.getElementById('progLangChart').getContext('2d');
+    new Chart(ctx3, {
+      type: 'bar',
+      data: {
+        labels: progLangs,
+        datasets: [{
+          label: 'Programming Languages Frequency',
+          data: progLangCounts,
+          backgroundColor: 'rgba(255, 82, 82, 0.7)',
+          borderColor: 'rgba(255, 82, 82, 1)',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: { color: '#e0e0e0' },
+            grid: { color: '#333' }
+          },
+          x: {
+            ticks: { color: '#e0e0e0' },
+            grid: { display: false }
+          }
+        },
+        plugins: {
+          legend: { labels: { color: '#e0e0e0' } }
+        }
+      }
+    });
+    
+    // Create Soft Skills Pie Chart.
+    const ctx4 = document.getElementById('softSkillChart').getContext('2d');
+    new Chart(ctx4, {
+      type: 'pie',
+      data: {
+        labels: softSkills,
+        datasets: [{
+          label: 'Soft Skills Frequency',
+          data: softSkillCounts,
+          backgroundColor: [
+            'rgba(66, 165, 245, 0.7)',
+            'rgba(102, 187, 106, 0.7)',
+            'rgba(171, 71, 188, 0.7)',
+            'rgba(255, 112, 67, 0.7)',
+            'rgba(77, 208, 225, 0.7)',
+            'rgba(255, 238, 88, 0.7)'
+          ],
+          borderColor: '#121212',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        plugins: {
+          legend: { labels: { color: '#e0e0e0' } }
+        }
+      }
+    });
+  </script>
+</body>
+</html>

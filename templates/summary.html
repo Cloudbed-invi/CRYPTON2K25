@@ -9,6 +9,7 @@
        padding: 20px;
        background: #f4f4f4;
        color: #333;
+       box-sizing: border-box;
      }
      h1 {
        text-align: center;
@@ -22,7 +23,14 @@
        max-width: 800px;
        border-radius: 8px;
        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-       word-wrap: break-word;
+       box-sizing: border-box;
+     }
+     .summary-text {
+       white-space: pre-wrap;
+       word-break: break-word;
+       overflow-wrap: break-word;
+       font-size: 1.1em;
+       line-height: 1.5em;
      }
      .back-link {
        text-align: center;
@@ -38,10 +46,10 @@
 <body>
   <h1>Summarized Resume</h1>
   <div class="summary-box">
-    <pre>{{ data }}</pre>
+    <div class="summary-text">{{ data }}</div>
   </div>
   <div class="back-link">
-    <a href="{{ url_for('index') }}">Back to Results</a>
+    <a href="javascript:history.back()">Back to Results</a>
   </div>
 </body>
 </html>
