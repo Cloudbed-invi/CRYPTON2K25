@@ -5,11 +5,22 @@
     <title>Extraction Results</title>
 </head>
 <body>
+    <h1>Job Title: {{ job_title }}</h1>
+    <h2>Required Skills: {{ required_skills }}</h2>
     <h1>Resume Extraction Results</h1>
     {% if results %}
       {% for result in results %}
         <h3>{{ result.file }}</h3>
+        {% if result.candidate_name %}
+          <p><strong>Candidate Name:</strong> {{ result.candidate_name }}</p>
+        {% endif %}
+        <p><strong>Match Score:</strong> {{ result.score }}%</p>
+        <h4>Extracted Text:</h4>
         <pre>{{ result.text }}</pre>
+        <h4>Extracted Entities:</h4>
+        <pre>{{ result.entities | tojson(indent=2) }}</pre>
+        <h4>Validation Results:</h4>
+        <pre>{{ result.validation | tojson(indent=2) }}</pre>
         <hr>
       {% endfor %}
     {% else %}

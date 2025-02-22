@@ -5,7 +5,7 @@
     <title>Smart Resume Parser - Upload</title>
 </head>
 <body>
-    <h1>Upload Resumes</h1>
+    <h1>Upload Resumes & Enter Job Requirements</h1>
     {% with messages = get_flashed_messages() %}
       {% if messages %}
         <ul>
@@ -16,7 +16,14 @@
       {% endif %}
     {% endwith %}
     <form action="{{ url_for('upload') }}" method="post" enctype="multipart/form-data">
-        <input type="file" name="files" multiple required>
+        <label for="job_title">Job Title:</label><br>
+        <input type="text" id="job_title" name="job_title" required><br><br>
+        
+        <label for="skills">Required Skills (comma separated):</label><br>
+        <input type="text" id="skills" name="skills" required><br><br>
+        
+        <label for="files">Upload Resumes (PDF, DOCX, TXT, or ZIP):</label><br>
+        <input type="file" name="files" id="files" multiple required>
         <br><br>
         <button type="submit">Upload</button>
     </form>

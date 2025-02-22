@@ -1,0 +1,5 @@
+python = 3.9
+pdfminer.six
+python-docx
+flask
+spacy

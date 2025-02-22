@@ -35,7 +35,7 @@ def extract_text_from_txt(file_path):
 
 def extract_text_from_file(file_path):
     """
-    Determines file type based on extension and extracts text accordingly.
+    Determines the file type based on its extension and extracts text.
     Supports PDF, DOCX, and TXT files.
     """
     file_path_lower = file_path.lower()
