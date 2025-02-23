@@ -5,7 +5,7 @@ import uuid
 import base64
 import re
 from collections import Counter
-from flask import Flask, render_template, request, flash, url_for
+from flask import Flask, render_template, request, flash, url_for, Response
 from transformers import pipeline
 from file_parser import extract_text_from_file
 from nlp_utils import (
@@ -22,37 +22,56 @@ app.secret_key = 'your_secret_key'  # Replace with your own secure key
 summarizer = pipeline("summarization", model="sshleifer/distilbart-cnn-12-6")
 
 # Global dictionaries to store data
-FILE_STORE = {}    # Maps summary_id -> file bytes for PDFs
-RAW_TEXT = {}      # Maps summary_id -> extracted text for resumes
-SUMMARY_DATA = {}  # Maps summary_id -> summarized text
+FILE_STORE = {}       # Maps summary_id -> file bytes for PDFs
+RAW_TEXT = {}         # Maps summary_id -> extracted text for resumes
+SUMMARY_DATA = {}     # Maps summary_id -> summarized text
+FILTERED_RESULTS = [] # Stores the filtered candidate results (for email download)
 
-def compute_score_robust(resume_text, job_title, required_skills, required_languages, min_skills, min_languages, enable_ats, enable_bonus, extra_bonus_keywords, extra_universities):
+# ----------------------
+# Helper Functions
+# ----------------------
+
+def extract_emails(text):
     """
-    Computes a robust score for a resume with a detailed breakdown.
+    Extract email addresses from a text using regex.
+    """
+    pattern = r'[\w\.-]+@[\w\.-]+\.\w+'
+    return re.findall(pattern, text)
+
+def compute_score_robust(resume_text, job_title, required_skills, required_languages, 
+                         min_skills, min_languages, enable_ats, enable_bonus, 
+                         extra_bonus_keywords, extra_universities):
+    """
+    Computes a robust resume score with a detailed breakdown.
+    
     Components:
       1. Skills + Job Requirement Matching (max = 5 points):
-         - Required Skills Matching (max = 4 points; based on the actual number of skills provided)
+         - Required Skills Matching (max = 4 points; uses min_skills as threshold if provided)
          - Job Title Matching (max = 1 point)
-      2. Languages Matching (if provided; max = 1 point)
-      3. Bonus Keywords (if enabled; max = 3 points)
-      4. ATS Compatibility (if enabled; max = 2 points)
-    
-    Returns a tuple: (final_score, breakdown)
+      2. Languages Matching (max = 1 point):
+         - If no language requirements are provided, award full points.
+      3. Bonus Keywords (max = 3 points):
+         - If bonus evaluation is not enabled, award full points.
+      4. ATS Compatibility (max = 2 points):
+         - If ATS evaluation is not enabled, award full points.
+         
+    Returns:
+        tuple: (final_score, breakdown)
     """
-    base_text = resume_text.lower() if resume_text else ""
+    base_text = str(resume_text).lower() if resume_text else ""
     
-    # Component 1: Skills + Job Requirement Matching (max 5)
+    # --- Component 1: Skills + Job Requirement Matching (Max = 5) ---
     required_skills_list = [s.strip().lower() for s in required_skills.split(',') if s.strip()]
+    skills_score = 0
     if required_skills_list:
         matched_skills = sum(1 for s in required_skills_list if s in base_text)
-        # Use the actual number of skills provided as the denominator.
-        denominator = len(required_skills_list)
-        skills_score = (matched_skills / denominator) * 4
+        if min_skills and str(min_skills).isdigit() and int(min_skills) > 0:
+            min_skills_val = int(min_skills)
+            skills_score = 4 if matched_skills >= min_skills_val else (matched_skills / min_skills_val) * 4
+        else:
+            skills_score = (matched_skills / len(required_skills_list)) * 4
         skills_score = min(skills_score, 4)
-    else:
-        skills_score = 0
-
-    # Job Title Matching (max 1)
+    
     job_title_score = 0
     if job_title:
         job_title_lower = job_title.lower().strip()
@@ -63,26 +82,27 @@ def compute_score_robust(resume_text, job_title, required_skills, required_langu
             if words:
                 match = sum(1 for word in words if word in base_text)
                 job_title_score = min(match / len(words), 1)
-    component1_score = skills_score + job_title_score  # Combined max = 5
+    
+    component1_score = skills_score + job_title_score
 
-    # Component 2: Languages Matching (max 1)
-    language_score = 0
+    # --- Component 2: Languages Matching (Max = 1) ---
     if required_languages:
         languages_list = [s.strip().lower() for s in required_languages.split(',') if s.strip()]
         if languages_list:
             matched_languages = sum(1 for lang in languages_list if lang in base_text)
-            if min_languages and min_languages.isdigit() and int(min_languages) > 0:
+            if min_languages and str(min_languages).isdigit() and int(min_languages) > 0:
                 min_languages_val = int(min_languages)
                 language_score = 1 if matched_languages >= min_languages_val else (matched_languages / min_languages_val)
             else:
-                language_score = (matched_languages / len(languages_list))
-            language_score = language_score * 1
+                language_score = matched_languages / len(languages_list)
+        else:
+            language_score = 1
     else:
-        language_score = 0
+        language_score = 1
 
-    # Component 3: Bonus Keywords (max 3)
-    bonus_score = 0.0
-    if enable_bonus == "yes":
+    # --- Component 3: Bonus Keywords (Max = 3) ---
+    if str(enable_bonus).strip().lower() == "yes":
+        bonus_score = 0.0
         bonus_keywords = {
             'aws certified': 1.0,
             'cisco certified': 1.0,
@@ -105,31 +125,22 @@ def compute_score_robust(resume_text, job_title, required_skills, required_langu
                 if uni:
                     bonus_keywords[uni] = 0.5
         for keyword, points in bonus_keywords.items():
-            if re.search(r'\b' + re.escape(keyword) + r'\b', base_text, re.IGNORECASE):
+            if re.search(r'\b' + re.escape(keyword) + r'\b', base_text):
                 bonus_score += points
-        bonus_score = min(bonus_score, 3)
+        bonus_score = min(bonus_score, 2)
     else:
-        bonus_score = 0
+        bonus_score = 2
 
-    # Component 4: ATS Compatibility (max 2)
-    ats_score = 0
-    if enable_ats == "yes":
+    # --- Component 4: ATS Compatibility (Max = 2) ---
+    if str(enable_ats).strip().lower() == "yes":
         ats_keywords = ["experience", "education", "skills", "certification", "projects", "summary", "objective", "profile"]
         ats_count = sum(1 for word in ats_keywords if word in base_text)
         ats_score = min((ats_count / len(ats_keywords)) * 2, 2)
     else:
-        ats_score = 0
+        ats_score = 2
 
     raw_total = component1_score + language_score + bonus_score + ats_score
-    
-    total_max = 5  # Component 1 is always enabled.
-    if required_languages:
-        total_max += 1
-    if enable_bonus == "yes":
-        total_max += 3
-    if enable_ats == "yes":
-        total_max += 2
-
+    total_max = 10
     final_score = (raw_total / total_max) * 10 if total_max > 0 else 0
 
     breakdown = {
@@ -143,6 +154,10 @@ def compute_score_robust(resume_text, job_title, required_skills, required_langu
         "total_max": total_max
     }
     return round(final_score, 2), breakdown
+
+# ----------------------
+# Routes
+# ----------------------
 
 @app.route('/', methods=['GET'])
 def index():
@@ -190,6 +205,8 @@ def upload():
                                 entities = extract_entities(extracted_text)
                                 validation = perform_basic_validation(extracted_text)
                                 candidate_name = extract_candidate_name(extracted_text)
+                                # Extract emails from the resume text.
+                                emails = extract_emails(extracted_text)
                                 score, breakdown = compute_score_robust(
                                     extracted_text,
                                     job_title,
@@ -213,6 +230,7 @@ def upload():
                                     'file': name,
                                     'text': extracted_text,
                                     'candidate_name': candidate_name,
+                                    'emails': emails,
                                     'entities': entities,
                                     'validation': validation,
                                     'score': score,
@@ -229,6 +247,8 @@ def upload():
                 entities = extract_entities(extracted_text)
                 validation = perform_basic_validation(extracted_text)
                 candidate_name = extract_candidate_name(extracted_text)
+                # Extract emails from the resume text.
+                emails = extract_emails(extracted_text)
                 score, breakdown = compute_score_robust(
                     extracted_text,
                     job_title,
@@ -253,6 +273,7 @@ def upload():
                     'file': file.filename,
                     'text': extracted_text,
                     'candidate_name': candidate_name,
+                    'emails': emails,
                     'entities': entities,
                     'validation': validation,
                     'score': score,
@@ -264,6 +285,11 @@ def upload():
             results.append({'file': file.filename, 'text': f"Error processing file: {str(e)}"})
     
     results = sorted(results, key=lambda x: x.get('score', 0), reverse=True)
+    
+    # Store the filtered results globally for email download.
+    global FILTERED_RESULTS
+    FILTERED_RESULTS = results
+
     total_candidates = len(results)
     average_score = round(sum(r.get('score', 0) for r in results) / total_candidates, 2) if total_candidates > 0 else 0
     highest_score = max(r.get('score', 0) for r in results) if total_candidates > 0 else 0
@@ -312,6 +338,24 @@ def full():
     else:
         return "No resume ID provided", 404
 
+@app.route('/download_emails')
+def download_emails():
+    """
+    Aggregates email addresses from the filtered results,
+    removes duplicates, and returns them as a CSV download.
+    """
+    emails = []
+    for candidate in FILTERED_RESULTS:
+        emails.extend(candidate.get('emails', []))
+    # Remove duplicates and any empty entries.
+    emails = list(set(email for email in emails if email))
+    csv_content = "Email\n" + "\n".join(emails)
+    return Response(
+        csv_content,
+        mimetype="text/csv",
+        headers={"Content-Disposition": "attachment; filename=emails.csv"}
+    )
+
 @app.route('/dashboard')
 def dashboard():
     # Aggregate all resume texts.
@@ -328,7 +372,6 @@ def dashboard():
     prog_langs = ['python', 'java', 'c++', 'javascript', 'ruby', 'go', 'php', 'c#']
     prog_lang_counter = Counter()
     for lang in prog_langs:
-        # Tailor regex for languages with symbols.
         if lang in ['c++', 'c#']:
             pattern = r'(?<!\w)' + re.escape(lang) + r'(?!\w)'
         else:
@@ -354,7 +397,6 @@ def dashboard():
                 length_counts[i] += 1
                 break
 
-    # Prepare data for charts.
     top_buzzwords = buzzword_counter.most_common(10)
     prog_lang_counts = [prog_lang_counter[lang] for lang in prog_langs]
     soft_skill_counts = [soft_skill_counter[skill] for skill in soft_skills]
@@ -368,10 +410,9 @@ def dashboard():
                            soft_skills=soft_skills, soft_skill_counts=soft_skill_counts,
                            length_labels=length_labels, length_counts=length_counts)
 
-
-
 if __name__ == '__main__':
     FILE_STORE = {}
     RAW_TEXT = {}
     SUMMARY_DATA = {}
+    FILTERED_RESULTS = []
     app.run(debug=True)

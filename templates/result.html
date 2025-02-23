@@ -191,7 +191,6 @@
       backface-visibility: hidden;
       z-index: 2;
     }
-    /* The candidate name is now shown on the cover */
     .cover p {
       font-size: 1.2em;
       font-weight: bold;
@@ -302,7 +301,7 @@
     </button>
   </div>
   
-  <!-- Filter Panel -->
+  <!-- Filter Panel with Apply Filters and Open Gmail Compose Buttons -->
   <div class="filter-panel">
     <div>
       <label for="minScore">Minimum Score:</label>
@@ -315,12 +314,16 @@
     <div>
       <button onclick="applyFilters()">Apply Filters</button>
     </div>
+    <div>
+      <button onclick="openGmailCompose()">Open Gmail Compose</button>
+    </div>
   </div>
   
   <!-- Gallery Section -->
   <div class="gallery" id="gallery">
     {% for result in results %}
-      <div class="card" data-score="{{ result.score }}">
+      <!-- Each card has a data-emails attribute with a comma-separated list of that candidate’s emails -->
+      <div class="card" data-score="{{ result.score }}" data-emails="{{ result.emails | join(',') }}">
         <div class="book-card">
           <div class="ranking">{{ loop.index }}</div>
           <div class="book">
@@ -337,7 +340,7 @@
               {% if required_languages %}
                 <p><strong>Languages:</strong> {{ result.score_breakdown.languages }} / 1</p>
               {% endif %}
-              <p><strong>Bonus Keywords:</strong> {{ result.score_breakdown.bonus }} / 3</p>
+              <p><strong>Bonus Keywords:</strong> {{ result.score_breakdown.bonus }} / 2</p>
               <p><strong>ATS Compatibility:</strong> {{ result.score_breakdown.ats }} / 2</p>
               <p><strong>Raw Total:</strong> {{ result.score_breakdown.raw_total }} / {{ result.score_breakdown.total_max }}</p>
             </div>
@@ -350,6 +353,7 @@
               <path d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" stroke-linejoin="round" stroke-linecap="round"></path>
             </svg>
           </button>
+          <p></p>
           <button onclick="window.location.href='{{ url_for('full') }}?id={{ result.summary_id }}'; event.stopPropagation();">
             <span>View Full Resume</span>
             <svg width="15" height="15" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -362,30 +366,48 @@
   </div>
   
   <script>
-    // Filtering function
+    // Filtering function: shows/hides cards based on minScore and topN values.
     function applyFilters() {
       const minScore = parseFloat(document.getElementById('minScore').value) || 0;
       const topN = parseInt(document.getElementById('topN').value) || {{ total_candidates }};
       let cards = Array.from(document.querySelectorAll('.card'));
       
-      // Filter by minimum score.
+      // Filter cards based on minimum score.
       cards.forEach(card => {
         const score = parseFloat(card.getAttribute('data-score'));
-        if (score < minScore) {
-          card.style.display = 'none';
-        } else {
-          card.style.display = 'block';
-        }
+        card.style.display = (score < minScore) ? 'none' : 'block';
       });
       
-      // Show only the top N cards (assuming cards are sorted by score descending on the server).
+      // Show only the top N cards (assuming cards are sorted descending on the server).
       cards = cards.filter(card => card.style.display !== 'none');
       cards.forEach((card, index) => {
-        card.style.display = index >= topN ? 'none' : 'block';
+        card.style.display = (index >= topN) ? 'none' : 'block';
       });
     }
     
-    // Stagger animation delay for a smoother entrance
+    // Function to open Gmail's compose window in a new tab with the cc field prefilled.
+    function openGmailCompose() {
+      let visibleCards = Array.from(document.querySelectorAll('.card')).filter(card => card.style.display !== 'none');
+      let emailsSet = new Set();
+      visibleCards.forEach(card => {
+        let candidateEmails = card.getAttribute('data-emails');
+        if (candidateEmails) {
+          candidateEmails.split(',').forEach(email => {
+            email = email.trim();
+            if (email) emailsSet.add(email);
+          });
+        }
+      });
+      let aggregatedEmails = Array.from(emailsSet).join(',');
+      if (aggregatedEmails) {
+        let url = 'https://mail.google.com/mail/?view=cm&fs=1&tf=1&cc=' + encodeURIComponent(aggregatedEmails);
+        window.open(url, '_blank');  // Opens Gmail in a new tab.
+      } else {
+        alert('No emails found in filtered results.');
+      }
+    }
+    
+    // Apply staggered animation delay for a smoother entrance.
     document.addEventListener("DOMContentLoaded", function() {
       const cards = document.querySelectorAll('.card');
       cards.forEach((card, index) => {
