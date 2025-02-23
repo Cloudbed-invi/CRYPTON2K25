@@ -3,19 +3,38 @@
 <head>
   <meta charset="UTF-8">
   <title>Resume Extraction Results</title>
+  <!-- Import the Inter font from Google Fonts -->
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <style>
-    /* Base dark theme with modern styling */
+    /* Base Styles */
+    * {
+      box-sizing: border-box;
+    }
     body {
       margin: 0;
       padding: 0;
-      font-family: 'Roboto', sans-serif;
-      background: #121212;
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(to bottom right, #0f0c29, #000000, #24243e);
       color: #e0e0e0;
-      box-sizing: border-box;
     }
     h1, h2, h3, h4, p {
       margin: 0.5em;
     }
+    
+    /* Fade-In Animations */
+    .summary, .filter-panel, .dashboard-button {
+      opacity: 0;
+      animation: fadeIn 1s ease forwards;
+    }
+    @keyframes fadeIn {
+      to { opacity: 1; }
+    }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
     /* Summary Dashboard */
     .summary {
       background: #1e1e1e;
@@ -26,6 +45,7 @@
       border-radius: 8px;
       font-size: 1.1em;
     }
+    
     /* Dashboard Navigation Button */
     .dashboard-button {
       text-align: center;
@@ -48,6 +68,7 @@
       box-shadow: 5px 5px 20px #d1d1d1;
       transform: translateY(-3px);
     }
+    
     /* Filter Panel */
     .filter-panel {
       background: #1e1e1e;
@@ -90,6 +111,7 @@
       box-shadow: 5px 5px 20px #d1d1d1;
       transform: translateY(-3px);
     }
+    
     /* Gallery Layout */
     .gallery {
       display: grid;
@@ -97,7 +119,8 @@
       gap: 20px;
       padding: 20px;
     }
-    /* Candidate Card Styling with animation */
+    
+    /* Candidate Card (Book Style) */
     .card {
       background: #1e1e1e;
       border-radius: 8px;
@@ -107,75 +130,132 @@
       cursor: pointer;
       transition: transform 0.3s ease;
       width: 350px;
-      height: 450px;
       margin: auto;
-      padding-bottom: 60px;
       opacity: 0;
       animation: fadeInUp 0.6s ease forwards;
+      padding-bottom: 20px;
+      min-height: 500px;
     }
     .card:hover {
       transform: translateY(-5px);
     }
-    .card .content {
-      padding: 15px;
+    
+    /* Book Card Styling */
+    .book-card {
+      position: relative;
+      width: 300px;
+      height: 400px;
+      margin: 10px auto;
     }
-    .card .front .title {
-      font-size: 1.3em;
-      font-weight: bold;
-      color: #fff;
-      margin-bottom: 10px;
-    }
-    .card .front .score,
-    .card .front .position {
-      margin-bottom: 5px;
-    }
-    /* Score badge */
-    .score-badge {
+    .ranking {
       position: absolute;
-      bottom: 10px;
-      right: 10px;
+      top: -15px;
+      left: 50%;
+      transform: translateX(-50%);
       background: #03dac6;
       color: #121212;
-      width: 60px;
-      height: 60px;
       border-radius: 50%;
+      width: 30px;
+      height: 30px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.2em;
-      transition: transform 0.3s ease;
+      font-weight: bold;
+      z-index: 10;
+    }
+    .book {
+      position: relative;
+      border-radius: 10px;
+      width: 300px;
+      height: 400px;
+      background-color: #1e1e1e;
+      box-shadow: 1px 1px 12px #000;
+      transform-style: preserve-3d;
+      perspective: 2000px;
+    }
+    .cover {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border-radius: 10px;
+      background-color: #2c2c2c;
+      cursor: pointer;
+      transition: all 0.5s;
+      transform-origin: 0;
+      box-shadow: 1px 1px 12px #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backface-visibility: hidden;
       z-index: 2;
     }
-    .card:hover .score-badge {
-      transform: scale(1.1);
-    }
-    /* Expanded details */
-    .details {
-      max-height: 0;
-      overflow: hidden;
-      transition: max-height 0.5s ease;
-      background: #2c2c2c;
-      padding: 0 15px;
-    }
-    .card.expanded .details {
-      max-height: 800px;
-      padding: 15px;
-    }
-    /* Score Breakdown Styling */
-    .breakdown {
-      background: #333;
-      border: 1px solid #444;
-      padding: 10px;
-      border-radius: 4px;
-      margin-bottom: 15px;
+    /* The candidate name is now shown on the cover */
+    .cover p {
+      font-size: 1.2em;
+      font-weight: bold;
       color: #e0e0e0;
+      margin: 0;
+    }
+    .book:hover .cover {
+      transform: rotateY(-80deg);
+    }
+    .inside {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border-radius: 10px;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      backface-visibility: hidden;
+      z-index: 1;
       font-size: 0.9em;
       line-height: 1.4;
     }
-    .breakdown p {
-      margin: 5px 0;
+    .inside p {
+      margin: 3px 0;
     }
-    /* Button styling (from provided snippet, adjusted size) */
+    
+    /* Link Group (Buttons) */
+    .link-group {
+      margin-top: 15px;
+      text-align: center;
+    }
+    .link-group button {
+      margin-left: 10px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s linear;
+      border-radius: 10px;
+      border: 1px solid #F2BED1;
+      padding: 5px 10px;
+      background: none;
+      color: #03dac6;
+      font-size: 0.8em;
+    }
+    .link-group button:hover {
+      box-shadow: 5px 5px 20px #d1d1d1;
+      transform: translateY(-3px);
+    }
+    .link-group button > svg {
+      margin-left: 5px;
+      transition: all 0.4s ease-in;
+    }
+    .link-group button:hover > svg {
+      font-size: 1em;
+      transform: translateX(6px);
+    }
+    
+    /* Generic Button Styling */
     button {
       display: flex;
       align-items: center;
@@ -201,25 +281,7 @@
       box-shadow: 5px 5px 20px #d1d1d1;
       transform: translateY(-3px);
     }
-    /* Link Group styled as button container */
-    .link-group {
-      margin-top: 15px;
-      text-align: center;
-    }
-    .link-group button {
-      margin-left: 10px;
-    }
-    /* FadeInUp animation keyframes */
-    @keyframes fadeInUp {
-      from {
-        opacity: 0;
-        transform: translateY(20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
+    
   </style>
 </head>
 <body>
@@ -255,17 +317,20 @@
     </div>
   </div>
   
+  <!-- Gallery Section -->
   <div class="gallery" id="gallery">
     {% for result in results %}
       <div class="card" data-score="{{ result.score }}">
-        <div class="content">
-          <div class="front">
-            <div class="title">{{ result.candidate_name or result.file }}</div>
-            <div class="score">Score: {{ result.score }} / 10</div>
-            <div class="position">Position: {{ job_title }}</div>
-          </div>
-          <div class="back">
-            <div class="breakdown">
+        <div class="book-card">
+          <div class="ranking">{{ loop.index }}</div>
+          <div class="book">
+            <div class="cover">
+              <p>{{ result.candidate_name or result.file }}</p>
+            </div>
+            <div class="inside">
+              <p><strong>{{ result.candidate_name or result.file }}</strong></p>
+              <p>Score: {{ result.score }} / 10</p>
+              <p>Position: {{ job_title }}</p>
               <p><strong>Required Skills:</strong> {{ result.score_breakdown.required_skills }} / 4</p>
               <p><strong>Job Title Matching:</strong> {{ result.score_breakdown.job_title }} / 1</p>
               <p><strong>Total Skills + Job:</strong> {{ result.score_breakdown.skills_job }} / 5</p>
@@ -276,21 +341,21 @@
               <p><strong>ATS Compatibility:</strong> {{ result.score_breakdown.ats }} / 2</p>
               <p><strong>Raw Total:</strong> {{ result.score_breakdown.raw_total }} / {{ result.score_breakdown.total_max }}</p>
             </div>
-            <div class="link-group">
-              <button onclick="window.location.href='{{ url_for('summary') }}?id={{ result.summary_id }}'; event.stopPropagation();">
-                <span>View Summarized Resume</span>
-                <svg width="15" height="15" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" stroke-linejoin="round" stroke-linecap="round"></path>
-                </svg>
-              </button>
-              <button onclick="window.location.href='{{ url_for('full') }}?id={{ result.summary_id }}'; event.stopPropagation();">
-                <span>View Full Resume</span>
-                <svg width="15" height="15" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" stroke-linejoin="round" stroke-linecap="round"></path>
-                </svg>
-              </button>
-            </div>
           </div>
+        </div>
+        <div class="link-group">
+          <button onclick="window.location.href='{{ url_for('summary') }}?id={{ result.summary_id }}'; event.stopPropagation();">
+            <span>View Summarized Resume</span>
+            <svg width="15" height="15" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" stroke-linejoin="round" stroke-linecap="round"></path>
+            </svg>
+          </button>
+          <button onclick="window.location.href='{{ url_for('full') }}?id={{ result.summary_id }}'; event.stopPropagation();">
+            <span>View Full Resume</span>
+            <svg width="15" height="15" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" stroke-linejoin="round" stroke-linecap="round"></path>
+            </svg>
+          </button>
         </div>
       </div>
     {% endfor %}
@@ -316,11 +381,7 @@
       // Show only the top N cards (assuming cards are sorted by score descending on the server).
       cards = cards.filter(card => card.style.display !== 'none');
       cards.forEach((card, index) => {
-        if (index >= topN) {
-          card.style.display = 'none';
-        } else {
-          card.style.display = 'block';
-        }
+        card.style.display = index >= topN ? 'none' : 'block';
       });
     }
     

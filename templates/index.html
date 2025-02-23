@@ -1,119 +1,945 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Smart Resume Parser - Upload & Scoring Config</title>
-    <style>
-      fieldset {
-        margin: 1em 0;
-        padding: 1em;
-        border: 1px solid #ccc;
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Smart Resume Analysis</title>
+  
+  <!-- Bootstrap CSS -->
+  <link
+    href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+    rel="stylesheet"
+  />
+
+  <!-- Google Fonts: Inter & Orbitron -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Orbitron:wght@400;700&display=swap"
+    rel="stylesheet"
+  />
+
+  <style>
+    /* Global Reset/Overrides */
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      /* Single gradient background for entire page */
+      background: linear-gradient(to bottom right, #0f0c29, #000000, #24243e);
+      color: white;
+    }
+    a, a:hover {
+      text-decoration: none;
+    }
+
+    /* Utility classes to switch fonts */
+    .font-inter {
+      font-family: 'Inter', sans-serif;
+    }
+    .font-orbitron {
+      font-family: 'Orbitron', sans-serif;
+    }
+
+    /* Navigation Bar */
+    nav.navbar {
+      background-color: transparent; /* let gradient show through */
+      border-bottom: 1px solid #eee;
+      padding: 0.8rem 1rem;
+    }
+    .navbar-brand {
+      font-weight: 700;
+      font-size: 1.5rem;
+      color: #5A28C4; /* Purple tone for brand color */
+    }
+    .navbar-nav .nav-link {
+      color: white !important;
+      margin-right: 1rem;
+      font-weight: 500;
+    }
+
+    /* ===== New Hero Section ===== */
+    .hero-section {
+      padding: 3rem 0;
+      position: relative;
+    }
+    /* Card container styling */
+    .card {
+      width: 350px;
+      height: 300px; /* Adjust as needed */
+      margin: 0 auto;
+      background-color: #011522;
+      border-radius: 8px;
+      z-index: 1;
+    }
+    .tools {
+      display: flex;
+      align-items: center;
+      padding: 9px;
+    }
+    .circle {
+      padding: 0 4px;
+    }
+    .box {
+      display: inline-block;
+      align-items: center;
+      width: 10px;
+      height: 10px;
+      padding: 1px;
+      border-radius: 50%;
+    }
+    .red {
+      background-color: #ff605c;
+    }
+    .yellow {
+      background-color: #ffbd44;
+    }
+    .green {
+      background-color: #00ca4e;
+    }
+    .card__content {
+      padding: 20px;
+      text-align: center;
+      color: #fff;
+    }
+
+    /* Typewriter effect */
+    .typewriter-effect {
+      display: inline-block;
+      overflow: hidden;
+      border-right: .15em solid #fff;
+      white-space: nowrap;
+      animation: typing 3.5s steps(40, end), blink-caret .75s step-end infinite;
+      font-size: 1.3rem;
+      font-weight: 600;
+    }
+    @keyframes typing {
+      from { width: 0 }
+      to   { width: 100% }
+    }
+    @keyframes blink-caret {
+      50% { border-color: transparent }
+    }
+
+    /* Steps Section */
+    .step-card {
+      background-color: rgba(45, 45, 45, 0.3);
+      border-radius: 0.5rem;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      box-shadow: 0 0 20px rgba(124, 83, 212, 0.4);
+      overflow: hidden;
+    }
+    .step-content {
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+    }
+    .step-text {
+      flex: 1;
+      color: #32a6ff;
+      opacity: 0;
+      transition: all 0.5s ease;
+      min-width: 0;
+    }
+    .step-image {
+      flex: 1;
+      max-width: 400px;
+      transition: all 0.5s ease;
+    }
+    .step-image img {
+      width: 100%;
+      height: auto;
+      border-radius: 0.5rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .step-card:nth-child(odd) .step-content {
+      justify-content: flex-start;
+    }
+    .step-card:nth-child(odd) .step-text {
+      transform: translateX(100%);
+    }
+    .step-card:nth-child(odd) .step-image {
+      transform: translateX(0);
+    }
+    .step-card:nth-child(odd):hover .step-image {
+      transform: translateX(-25%);
+    }
+    .step-card:nth-child(even) .step-content {
+      justify-content: flex-end;
+      flex-direction: row-reverse;
+    }
+    .step-card:nth-child(even) .step-text {
+      transform: translateX(-100%);
+    }
+    .step-card:nth-child(even) .step-image {
+      transform: translateX(0);
+    }
+    .step-card:nth-child(even):hover .step-image {
+      transform: translateX(25%);
+    }
+    .step-card:hover .step-text {
+      transform: translateX(0);
+      opacity: 1;
+    }
+    #paragraph {
+      color: gray;
+    }
+    @media (max-width: 768px) {
+      .step-content {
+        flex-direction: column !important;
+        text-align: center;
       }
-      legend {
-        font-weight: bold;
+      .step-image {
+        margin: 0 auto;
+        transform: translateY(0) !important;
       }
-      label {
-        display: block;
-        margin-top: 0.5em;
+      .step-text {
+        transform: translateY(100%) !important;
       }
-      .scoring-info {
-        background-color: #f9f9f9;
-        padding: 1em;
-        margin: 1em 0;
-        border: 1px dashed #888;
+      .step-card:hover .step-image {
+        transform: translateY(-25%) !important;
       }
-      .details {
-        font-size: 0.9em;
-        color: #333;
-        margin-left: 1em;
+      .step-card:hover .step-text {
+        transform: translateY(0) !important;
       }
-    </style>
+    }
+    .step-card:nth-child(even) .step-content {
+      flex-direction: row-reverse;
+    }
+
+    /* About Us Section */
+    #aboutus {
+      padding: 3rem 0;
+    }
+    #aboutus h2 {
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+    #aboutus p {
+      text-align: center;
+      margin-bottom: 1rem;
+      color: #ccc;
+    }
+
+    /* Resume Gallery */
+    .resume-gallery .glass {
+      position: relative;
+      background: linear-gradient(#fff2, transparent);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 25px 25px rgba(0, 0, 0, 0.25);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: transform 0.5s, margin 0.5s;
+      border-radius: 10px;
+      margin: 0 -45px;
+      backdrop-filter: blur(10px);
+      transform: rotate(calc(var(--r) * 1deg));
+      overflow: hidden;
+    }
+    #row {
+      padding: 40px;
+    }
+    .resume-gallery:hover .glass {
+      transform: rotate(0deg);
+      margin: 0 10px;
+    }
+    .resume-gallery .glass img {
+      width: 100%;
+      height: auto;
+      object-fit: cover;
+    }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid #eee;
+      padding: 1rem 0;
+      text-align: center;
+    }
+    footer p {
+      margin: 0;
+      color: white;
+      font-size: 0.9rem;
+    }
+
+    /* Responsive Tweaks for the new hero layout */
+    @media (max-width: 992px) {
+      .hero-section .row {
+        align-items: center;
+      }
+    }
+
+    /* ===== Collapsible Scoring Section ===== */
+    .scoring-info {
+      background-color: #011522;
+      color: white;
+      border: 1px dashed #888;
+      padding: 1em;
+      margin: 1em 0;
+    }
+    .collapse-content {
+      display: none;
+      margin-top: 1em;
+    }
+    .collapse-content.open {
+      display: block;
+    }
+    #scoringToggle {
+      cursor: pointer;
+      font-size:27px;
+      text-align: center;
+    }
+
+    /* ===== Custom Input Fields ===== */
+    .form-control-custom {
+      position: relative;
+      margin: 20px 0 40px;
+      width: 100%;
+      max-width: 500px; /* More width for longer inputs */
+    }
+    .form-control-custom input[type="text"],
+    .form-control-custom input[type="number"] {
+      background-color: transparent;
+      border: 0;
+      border-bottom: 2px #fff solid;
+      display: block;
+      width: 100%;
+      padding: 10px 0;
+      font-size: 16px;
+      color: #ccc;
+    }
+    .form-control-custom input:focus,
+    .form-control-custom input:valid {
+      outline: 0;
+      border-bottom-color: lightblue;
+    }
+    .form-control-custom label {
+      position: absolute;
+      top: 10px;
+      left: 0;
+      pointer-events: none;
+      transition: 0.3s ease;
+      font-size: 16px;
+      color: #fff;
+    }
+    .form-control-custom input:focus + label,
+    .form-control-custom input:valid + label {
+      transform: translateY(-20px);
+      font-size: 12px;
+      color: lightblue;
+    }
+    .form-control-custom input[type="text"],
+    .form-control-custom input[type="number"] {
+      background-color: transparent;
+      border: 0;
+      border-bottom: 2px #fff solid;
+      display: block;
+      width: 100%;
+      padding: 10px 0;
+      font-size: 16px;
+      color: #ccc;
+    }
+
+    /* Override browser autofill background and text color */
+    .form-control-custom input:-webkit-autofill {
+      -webkit-box-shadow: 0 0 0px 1000px transparent inset;
+      -webkit-text-fill-color: #ccc;
+    }
+
+    .form-control-custom input:-webkit-autofill:focus,
+    .form-control-custom input:-webkit-autofill:hover,
+    .form-control-custom input:-webkit-autofill:active {
+      -webkit-box-shadow: 0 0 0 30px transparent inset;
+      -webkit-text-fill-color: #ccc;
+    }
+
+    /* Other states remain the same */
+    .form-control-custom input:focus,
+    .form-control-custom input:valid {
+      outline: 0;
+      border-bottom-color: lightblue;
+    }
+
+    .form-control-custom label {
+      position: absolute;
+      top: 10px;
+      left: 0;
+      pointer-events: none;
+      transition: 0.3s ease;
+      font-size: 16px;
+      color: #fff;
+    }
+
+    .form-control-custom input:focus + label,
+    .form-control-custom input:valid + label {
+      transform: translateY(-20px);
+      font-size: 12px;
+      color: lightblue;
+    }
+
+    /* ===== Custom Checkboxes ===== */
+    .checkbox-wrapper {
+      display: flex;
+      align-items: center;
+      margin: 20px 0 40px;
+    }
+    .checkbox-wrapper .checkbox-label {
+      margin-left: 8px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    .checkbox-container {
+      cursor: pointer;
+    }
+    .checkbox-container input {
+      display: none;
+    }
+    .checkbox-container svg {
+      overflow: visible;
+      width: 16px;  /* Reduced width */
+      height: 16px; /* Reduced height */
+    }
+    .path {
+      fill: none;
+      stroke: white;
+      stroke-width: 6;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      transition: stroke-dasharray 0.5s ease, stroke-dashoffset 0.5s ease;
+      stroke-dasharray: 241 9999999;
+      stroke-dashoffset: 0;
+    }
+    .checkbox-container input:checked ~ svg .path {
+      stroke-dasharray: 70.5096664428711 9999999;
+      stroke-dashoffset: -262.2723388671875;
+    }
+
+    /* ====== Custom "Choose File" Button ====== */
+    .cta {
+      border: none;
+      background: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      margin-top: 10px; /* small spacing from label */
+    }
+    .cta span {
+      padding-bottom: 7px;
+      letter-spacing: 2px;
+      font-size: 14px;
+      padding-right: 15px;
+      text-transform: uppercase;
+      color: #fff; /* White text for better contrast */
+    }
+    .cta svg {
+      transform: translateX(-8px);
+      transition: all 0.3s ease;
+      fill: #fff;
+    }
+    .cta:hover svg {
+      transform: translateX(0);
+    }
+    .cta:active svg {
+      transform: scale(0.9);
+    }
+    .hover-underline-animation {
+      position: relative;
+      color: white;
+      padding-bottom: 20px;
+    }
+    .hover-underline-animation:after {
+      content: "";
+      position: absolute;
+      width: 100%;
+      transform: scaleX(0);
+      height: 2px;
+      bottom: 0;
+      left: 0;
+      background-color: #ffffff;
+      transform-origin: bottom right;
+      transition: transform 0.25s ease-out;
+    }
+    .cta:hover .hover-underline-animation:after {
+      transform: scaleX(1);
+      transform-origin: bottom left;
+    }
+
+    /* Hide the file input */
+    #files {
+      display: none;
+    }
+
+    /* ====== Custom "Upload" Button (Round to Wide) ====== */
+    .button {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background-color: rgb(20, 20, 20);
+      border: none;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0px 0px 0px 4px rgba(180, 160, 255, 0.253);
+      cursor: pointer;
+      transition-duration: 0.3s;
+      overflow: hidden;
+      position: relative;
+      margin-top: 20px; /* space above */
+    }
+    .svgIcon {
+      width: 12px;
+      transition-duration: 0.3s;
+    }
+    .svgIcon path {
+      fill: white;
+    }
+    .button:hover {
+      width: 140px;
+      border-radius: 50px;
+      transition-duration: 0.3s;
+      background-color: rgb(181, 160, 255);
+      align-items: center;
+    }
+    .button:hover .svgIcon {
+      transform: translateY(-200%);
+    }
+    .button::before {
+      position: absolute;
+      bottom: -20px;
+      content: "Upload"; /* Changed from "Back to Top" to "Upload" */
+      color: white;
+      font-size: 0px;
+      transition-duration: 0.3s;
+    }
+    .button:hover::before {
+      font-size: 13px;
+      opacity: 1;
+      bottom: unset;
+      transition-duration: 0.3s;
+    }
+
+  </style>
 </head>
-<body>
-    <h1>Upload Resumes & Configure Scoring Parameters</h1>
+<body class="font-inter"> <!-- Inter for readability in hero & config -->
 
-    <!-- Scoring Mechanism Explanation -->
-    <div class="scoring-info">
-        <h2>Scoring Mechanism Explained</h2>
-        <p>
-            Our resume scoring algorithm evaluates each resume on a scale of <strong>10 points</strong> based on:
-        </p>
-        <ul>
-            <li>
-                <strong>Skills + Job Requirement Matching (max 5 points):</strong>
-                Required skills (scaled with an ideal of 4 skills; max 4 points) plus job title matching (max 1 point).
-            </li>
-            <li>
-                <strong>Languages Matching (max 1 point):</strong>
-                If specified, awards up to 1 point based on required languages.
-            </li>
-            <li>
-                <strong>Bonus Keywords (max 3 points):</strong>
-                If enabled, awards points for certifications and buzzwords. 
-                <div class="details">
-                    <strong>Implemented bonus keywords:</strong> "aws certified", "cisco certified", "pmp", "google", "microsoft", "oracle", "ibm", "certified", "scrum". Additional keywords can be added.
-                </div>
-            </li>
-            <li>
-                <strong>ATS Compatibility (max 2 points):</strong>
-                If enabled, checks for section headers such as "experience", "education", etc.
-            </li>
+  <!-- Navigation Bar -->
+  <nav class="navbar navbar-expand-lg">
+    <div class="container">
+      <a class="navbar-brand" href="#">Smart Resume Analysis</a>
+      <button
+        class="navbar-toggler"
+        type="button"
+        data-toggle="collapse"
+        data-target="#navbarNav"
+        aria-controls="navbarNav"
+        aria-expanded="false"
+        aria-label="Toggle navigation"
+      >
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ml-auto align-items-center">
+          <li class="nav-item">
+            <a class="nav-link" href="#config">Config</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#steps">How It Works</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#aboutus">About us</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#contact">Contact</a>
+          </li>
         </ul>
-        <p>
-            The raw score is computed from the enabled components and then scaled to a maximum of 10 points.
-        </p>
+      </div>
     </div>
+  </nav>
 
-    {% with messages = get_flashed_messages() %}
-      {% if messages %}
-        <ul>
-          {% for message in messages %}
-            <li>{{ message }}</li>
-          {% endfor %}
-        </ul>
-      {% endif %}
-    {% endwith %}
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="container">
+      <div class="row align-items-center">
+        <!-- Container/Card on the LEFT -->
+        <div class="col-md-6 mb-4 mb-md-0">
+          <div class="card">
+            <div class="tools">
+              <div class="circle">
+                <span class="red box"></span>
+              </div>
+              <div class="circle">
+                <span class="yellow box"></span>
+              </div>
+              <div class="circle">
+                <span class="green box"></span>
+              </div>
+            </div>
+            <div class="card__content d-flex flex-column justify-content-center h-100">
+              <h1 class="typewriter-effect">AI Resume Evaluator</h1>
+              <p class="mt-3">"Makes HR Life Easy"</p>
+            </div>
+          </div>
+        </div>
+        <!-- Content/Paragraph on the RIGHT -->
+        <div class="col-md-6">
+          <h2 style="color: #5A28C4;">A Smarter Way to Hire</h2>
+          <p class="mt-3" style="line-height: 1.5;">
+            Our powerful AI Resume Evaluator helps you automatically parse resumes, extract key skills, 
+            and highlight the most relevant candidates—all within seconds. No more endless scrolling, 
+            manual filtering, or guesswork. Let our intelligent system deliver top-tier talent 
+            directly to your doorstep.
+          </p>
+          <p style="line-height: 1.5;">
+            By leveraging cutting-edge NLP and ATS optimization, we ensure your hiring process 
+            is both faster and more accurate. Experience the future of recruitment today!
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- End of Hero Section -->
 
-    <form action="{{ url_for('upload') }}" method="post" enctype="multipart/form-data">
-        <label for="job_title">Job Title:</label>
-        <input type="text" id="job_title" name="job_title" required>
+  <!-- Config Section -->
+  <section id="config" class="py-5">
+    <div class="container">
+      <h1 class="text-center mb-4">Resume ScoreLab</h1>
 
-        <label for="skills">Required Skills (comma separated):</label>
-        <input type="text" id="skills" name="skills" required>
+      <!-- Scoring Mechanism Explanation (Collapsible) -->
+      <div class="scoring-info mb-4">
+        <h2 id="scoringToggle">Scoring Mechanism</h2>
+        <div id="scoringContent" class="collapse-content">
+          <p>
+            Our resume scoring algorithm evaluates each resume on a scale of <strong>10 points</strong> based on:
+          </p>
+          <ul>
+            <li>
+              <strong>Skills + Job Requirement Matching (max 5 points):</strong>
+              Required skills (scaled with an ideal of 4 skills; max 4 points) plus job title matching (max 1 point).
+            </li>
+            <li>
+              <strong>Languages Matching (max 1 point):</strong>
+              If specified, awards up to 1 point based on required languages.
+            </li>
+            <li>
+              <strong>Bonus Keywords (max 3 points):</strong>
+              If enabled, awards points for certifications and buzzwords.
+              <div class="details" style="font-size: 0.9em; margin-left: 1em;">
+                <strong>Implemented bonus keywords:</strong> "aws certified", "cisco certified", "pmp", "google", 
+                "microsoft", "oracle", "ibm", "certified", "scrum". Additional keywords can be added.
+              </div>
+            </li>
+            <li>
+              <strong>ATS Compatibility (max 2 points):</strong>
+              If enabled, checks for section headers such as "experience", "education", etc.
+            </li>
+          </ul>
+          <p>
+            The raw score is computed from the enabled components and then scaled to a maximum of 10 points.
+          </p>
+        </div>
+      </div>
 
-        <label for="languages">Required Languages (comma separated, optional):</label>
-        <input type="text" id="languages" name="languages">
+      {% with messages = get_flashed_messages() %}
+        {% if messages %}
+          <ul>
+            {% for message in messages %}
+              <li>{{ message }}</li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+      {% endwith %}
 
-        <fieldset>
-            <legend>Scoring Configuration</legend>
-            <label for="min_skills">Minimum Required Skills Match (number):</label>
-            <input type="number" id="min_skills" name="min_skills" min="0" placeholder="e.g., 3">
+      <!-- Updated Form with custom file input style -->
+      <form action="{{ url_for('upload') }}" method="post" enctype="multipart/form-data">
+        <!-- Job Title -->
+        <div class="form-control-custom">
+          <input type="text" id="job_title" name="job_title" required>
+          <label for="job_title"><span>Job Title</span></label>
+        </div>
 
-            <label for="min_languages">Minimum Languages Match (number, optional):</label>
-            <input type="number" id="min_languages" name="min_languages" min="0" placeholder="e.g., 1">
+        <!-- Required Skills -->
+        <div class="form-control-custom">
+          <input type="text" id="skills" name="skills" required>
+          <label for="skills"><span>Required Skills (comma separated)</span></label>
+        </div>
 
-            <label for="enable_ats">
+        <!-- Required Languages -->
+        <div class="form-control-custom">
+          <input type="text" id="languages" name="languages">
+          <label for="languages"><span>Required Languages (optional)</span></label>
+        </div>
+
+        <fieldset class="border p-3 mb-3">
+          <legend class="w-auto px-2">Scoring Configuration</legend>
+          
+          <!-- Min Skills -->
+          <div class="form-control-custom">
+            <input type="number" id="min_skills" name="min_skills" min="0">
+            <label for="min_skills"><span>Minimum Required Skills Match</span></label>
+          </div>
+
+          <!-- Min Languages -->
+          <div class="form-control-custom">
+            <input type="number" id="min_languages" name="min_languages" min="0">
+            <label for="min_languages"><span>Minimum Languages Match</span></label>
+          </div>
+
+          <!-- ATS Compatibility Checkbox -->
+          <div class="checkbox-wrapper">
+            <label class="checkbox-container">
               <input type="checkbox" id="enable_ats" name="enable_ats" value="yes" checked>
-              Use ATS Compatibility Scoring
+              <svg viewBox="0 0 64 64" height="2em" width="2em">
+                <path d="M 0 16 V 56 A 8 8 90 0 0 8 64 H 56 A 8 8 90 0 0 64 56 V 8 A 8 8 90 0 0 56 0 H 8 A 8 8 90 0 0 0 8 V 16 L 32 48 L 64 16 V 8 A 8 8 90 0 0 56 0 H 8 A 8 8 90 0 0 0 8 V 56 A 8 8 90 0 0 8 64 H 56 A 8 8 90 0 0 64 56 V 16" pathLength="575.0541381835938" class="path"></path>
+              </svg>
             </label>
+            <label for="enable_ats" class="checkbox-label">Use ATS Compatibility Scoring</label>
+          </div>
 
-            <label for="enable_bonus">
+          <!-- Bonus Keywords Checkbox -->
+          <div class="checkbox-wrapper">
+            <label class="checkbox-container">
               <input type="checkbox" id="enable_bonus" name="enable_bonus" value="yes" checked>
-              Use Bonus Keywords Scoring
+              <svg viewBox="0 0 64 64" height="2em" width="2em">
+                <path d="M 0 16 V 56 A 8 8 90 0 0 8 64 H 56 A 8 8 90 0 0 64 56 V 8 A 8 8 90 0 0 56 0 H 8 A 8 8 90 0 0 0 8 V 16 L 32 48 L 64 16 V 8 A 8 8 90 0 0 56 0 H 8 A 8 8 90 0 0 0 8 V 56 A 8 8 90 0 0 8 64 H 56 A 8 8 90 0 0 64 56 V 16" pathLength="575.0541381835938" class="path"></path>
+              </svg>
             </label>
+            <label for="enable_bonus" class="checkbox-label">Use Bonus Keywords Scoring</label>
+          </div>
 
-            <label for="extra_bonus_keywords">Additional Bonus Keywords (comma separated, optional):</label>
-            <input type="text" id="extra_bonus_keywords" name="extra_bonus_keywords" placeholder="e.g., 'Scrum, Agile, Six Sigma'">
+          <!-- Extra Bonus Keywords -->
+          <div class="form-control-custom">
+            <input type="text" id="extra_bonus_keywords" name="extra_bonus_keywords">
+            <label for="extra_bonus_keywords"><span>Additional Bonus Keywords</span></label>
+          </div>
 
-            <label for="extra_universities">Additional Recognized Universities (comma separated, optional):</label>
-            <input type="text" id="extra_universities" name="extra_universities" placeholder="e.g., 'MIT, Caltech'">
+          <!-- Extra Universities -->
+          <div class="form-control-custom">
+            <input type="text" id="extra_universities" name="extra_universities">
+            <label for="extra_universities"><span>Additional Recognized Universities</span></label>
+          </div>
         </fieldset>
 
-        <label for="files">Upload Resumes (PDF, DOCX, TXT, or ZIP):</label>
-        <input type="file" name="files" id="files" multiple required>
+        <!-- File Upload (Custom "Choose File") -->
+        <div class="form-control-custom">
+          <!-- Hidden input -->
+          <input type="file" name="files" id="files" multiple required>
+          <!-- Visible button triggers the hidden file input -->
+          <button type="button" class="cta" id="chooseFileBtn">
+            <span class="hover-underline-animation">Choose File</span>
+            <svg
+              id="arrow-horizontal"
+              xmlns="http://www.w3.org/2000/svg"
+              width="30"
+              height="10"
+              viewBox="0 0 46 16"
+            >
+              <path
+                id="Path_10"
+                data-name="Path 10"
+                d="M8,0,6.545,1.455l5.506,5.506H-30V9.039H12.052L6.545,14.545,8,16l8-8Z"
+                transform="translate(30)"
+              ></path>
+            </svg>
+          </button>
+          <label for="files"><span></span></label>
+        </div>
 
-        <br><br>
-        <button type="submit">Upload</button>
-    </form>
+        <!-- Round "Upload" Button -->
+        <button type="submit" class="button" id="uploadButton">
+          <svg class="svgIcon" viewBox="0 0 384 512">
+            <path
+              d="M214.6 41.4c-12.5-12.5-32.8-12.5-45.3 0l-160 160c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L160 141.2V448c0 17.7 14.3 32 32 32s32-14.3 32-32V141.2l74.6 74.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3l-160-160z"
+            ></path>
+          </svg>
+        </button>
+      </form>
+    </div>
+  </section>
+
+  <!-- Steps Section (Orbitron font from here onward) -->
+  <section id="steps" class="py-16 font-orbitron">
+    <div class="container mx-auto px-4">
+      <h2 class="text-3xl font-bold text-center mb-12" id="top">
+        How Our Resume Parser Algorithm Works?
+        <p></p>
+      </h2>
+      
+      <!-- Step 1 -->
+      <div class="step-card" id="1">
+        <div class="step-content">
+            <div class="step-image">
+                <img src="{{ url_for('static', filename='img-1.png') }}" alt="Document text extraction process">
+            </div>
+            <div class="step-text">
+                <h3 class="text-xl font-semibold mb-4">
+                    Step 1 - Extract Text from Any Document Format
+                </h3>
+                <p class="text-gray-300" id="paragraph">
+                    Our resume parser algorithm extracts text from any document format while preserving the structure. It handles various file types and processes them precisely, which is crucial for ATS-friendly parsing.
+                </p>
+            </div>
+        </div>
+      </div>
+      
+      <!-- Step 2 -->
+      <div class="step-card">
+        <div class="step-content">
+            <div class="step-image">
+                <img src="{{ url_for('static', filename='img-2.png') }}" alt="Data organization process">
+            </div>
+            <div class="step-text">
+                <h3 class="text-xl font-semibold mb-4">
+                    Step 2 - Organize Data into Logical Sections
+                </h3>
+                <p class="text-gray-300" id="paragraph">
+                    The extracted text is then organized into structured sections. We use advanced algorithms to properly recognize and separate structured organizational data.
+                </p>
+            </div>
+        </div>
+      </div>
+      
+      <!-- Step 3 -->
+      <div class="step-card" id="1">
+        <div class="step-content">
+            <div class="step-image">
+                <img src="{{ url_for('static', filename='img-3.png') }}" alt="Document text extraction process">
+            </div>
+            <div class="step-text">
+                <h3 class="text-xl font-semibold mb-4">
+                    Step 3 - Filter the users based on the requirement
+                </h3>
+                <p class="text-gray-300" id="paragraph">
+                  In this step, You can use the filter column to filter the data shown based on your need.
+                </p>
+            </div>
+        </div>
+      </div>
+      
+      <!-- Step 4 -->
+      <div class="step-card">
+        <div class="step-content">
+            <div class="step-image">
+                <img src="{{ url_for('static', filename='img-4.png') }}" alt="Data organization process">
+            </div>
+            <div class="step-text">
+                <h3 class="text-xl font-semibold mb-4">
+                    Step 4 - Get the dashboard Analysis Over submitted reviews
+                </h3>
+                <p class="text-gray-300" id="paragraph">
+                  You can get summary of either an individual or dashboard analysis of all the resumes submitted.
+                </p>
+            </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- About Us Section (Orbitron) -->
+  <section id="aboutus" class="py-5 font-orbitron">
+    <div class="container">
+      <h2 class="text-center mb-4">About Us</h2>
+      <p class="text-center">
+        Smart Resume Analysis is a revolutionary AI-powered resume parser that helps businesses hire top talent faster.
+      </p>
+      <p class="text-center">
+        Our mission is to streamline the hiring process by automating resume analysis and providing structured output to help businesses save time and money.
+      </p>
+      <p class="text-center">
+        We are committed to providing excellent customer service, making our platform accessible and user-friendly.
+      </p>
+    </div>
+  </section>
+
+  <!-- Our Resumes Section (Orbitron) -->
+  <section id="our-resumes" class="py-5 font-orbitron">
+    <div class="container">
+      <div id="row">
+        <h2>Our Team</h2>
+        <p>Take a look at our a glimpse of our jounery through the Entire project with OWASP KARE, ZOHO, </p>
+      </div>
+      <div class="row resume-gallery">
+        <div class="col-md-4 mb-4">
+          <div class="glass" style="--r: -15;">
+            <img src="{{ url_for('static', filename='img1-1.jpg') }}" alt="Resume 1" class="img-fluid rounded">
+          </div>
+        </div>
+        <div class="col-md-4 mb-4">
+          <div class="glass" style="--r: 5;">
+            <img src="{{ url_for('static', filename='img1-2.jpg') }}" alt="Resume 2" class="img-fluid rounded">
+          </div>
+        </div>
+        <div class="col-md-4 mb-4">
+          <div class="glass" style="--r: 10;">
+            <img src="{{ url_for('static', filename='img1-3.jpg') }}" alt="Resume 3" class="img-fluid rounded">
+          </div>
+        </div>
+        <div class="col-md-4 mb-4">
+          <div class="glass" style="--r: -5;">
+            <img src="{{ url_for('static', filename='img1-4.jpg') }}" alt="Resume 4" class="img-fluid rounded">
+          </div>
+        </div>
+        <div class="col-md-4 mb-4">
+          <div class="glass" style="--r: 0;">
+            <img src="{{ url_for('static', filename='img1-5.jpg') }}" alt="Resume 5" class="img-fluid rounded">
+          </div>
+        </div>
+        <div class="col-md-4 mb-4">
+          <div class="glass" style="--r: 15;">
+            <img src="{{ url_for('static', filename='img1-6.jpg') }}" alt="Resume 6" class="img-fluid rounded">
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Contact Section (Orbitron) -->
+  <section id="contact" class="py-5 font-orbitron">
+    <div class="container text-center">
+      <h2>Contact Us</h2>
+      <p>
+        Have any questions? Get in touch with us for more information or support.
+      </p>
+      <p>Email: sriharshakota2004@gmail.com  | linkedin: https://www.linkedin.com/in/sri-harsha-kota-32749b349/</p>
+      <p>Email: manojraj6129@gmail.com  | linkedin: https://www.linkedin.com/in/a-manoj-raj-b90325289/</p>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="font-orbitron">
+    <div class="container">
+      <p>&copy; 2025 Smart Resume Analysis. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <!-- Bootstrap JS and dependencies -->
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"
+  ></script>
+
+  <!-- Toggle Script for Scoring Mechanism -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const scoringToggle = document.getElementById('scoringToggle');
+      const scoringContent = document.getElementById('scoringContent');
+
+      if (scoringToggle && scoringContent) {
+        scoringToggle.addEventListener('click', function() {
+          scoringContent.classList.toggle('open');
+        });
+      }
+
+      // "Choose File" button triggers hidden file input
+      const chooseFileBtn = document.getElementById('chooseFileBtn');
+      const filesInput = document.getElementById('files');
+      if (chooseFileBtn && filesInput) {
+        chooseFileBtn.addEventListener('click', function() {
+          filesInput.click();
+        });
+      }
+    });
+  </script>
 </body>
 </html>

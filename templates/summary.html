@@ -4,43 +4,57 @@
   <meta charset="UTF-8">
   <title>Summarized Resume</title>
   <style>
-     body {
-       font-family: Arial, sans-serif;
-       padding: 20px;
-       background: #f4f4f4;
-       color: #333;
-       box-sizing: border-box;
-     }
-     h1 {
-       text-align: center;
-     }
-     .summary-box {
-       background: #fff;
-       padding: 20px;
-       border: 1px solid #ddd;
-       margin: 20px auto;
-       width: 90%;
-       max-width: 800px;
-       border-radius: 8px;
-       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-       box-sizing: border-box;
-     }
-     .summary-text {
-       white-space: pre-wrap;
-       word-break: break-word;
-       overflow-wrap: break-word;
-       font-size: 1.1em;
-       line-height: 1.5em;
-     }
-     .back-link {
-       text-align: center;
-       margin-top: 20px;
-     }
-     .back-link a {
-       text-decoration: none;
-       color: #3498db;
-       font-size: 1em;
-     }
+    /* Body: dark gradient + lighter text */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      box-sizing: border-box;
+      background: linear-gradient(to bottom right, #0f0c29, #000000, #24243e);
+      color: #e0e0e0;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    /* Summary Box: dark background, lighter text */
+    .summary-box {
+      background: rgba(30, 30, 30, 0.85);
+      border: 1px solid #333;
+      padding: 20px;
+      margin: 20px auto;
+      width: 90%;
+      max-width: 800px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.6);
+      box-sizing: border-box;
+    }
+
+    /* Text inside the summary box: keep the same style but lighter text color */
+    .summary-text {
+      white-space: pre-wrap;
+      word-break: break-word;
+      overflow-wrap: break-word;
+      font-size: 1.1em;
+      line-height: 1.5em;
+      color: #e0e0e0;
+    }
+
+    /* Back link: consistent color with other pages (e.g., #03dac6) */
+    .back-link {
+      text-align: center;
+      margin-top: 20px;
+    }
+    .back-link a {
+      text-decoration: none;
+      color: #03dac6;
+      font-size: 1em;
+    }
+    .back-link a:hover {
+      text-decoration: underline;
+    }
   </style>
 </head>
 <body>
